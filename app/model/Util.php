@@ -81,40 +81,65 @@ class Util {
 	public static function encrypt($data) { return self::crypt('encrypt', $data); }
 
 
-
-
 	/**
 	<fusedoc>
 		<description>
-			get page content remotely
+			send http-request and get response body
 		</description>
 		<io>
 			<in>
-				<string name="$pageURL" />
-				<reference name="&$pageHeader" />
-				<reference name="&$pageLoadTime" />
+				<string name="$url" />
+				<string name="$method" default="GET" comments="GET|POST|PUT|DELETE" />
+				<structure name="$fields">
+					<string name="~fieldName~" comments="no url-encoded" />
+				</structure>
+				<reference name="&$responseHeader" />
+				<reference name="&$responseTime" />
 			</in>
 			<out>
 				<string name="~return~" optional="yes" oncondition="success" comments="page response" />
-				<string name="$pageHeader" optional="yes" oncondition="success" />
-				<number name="$pageLoadTime" optional="yes" oncondition="success" />
+				<string name="$responseHeader" optional="yes" oncondition="success" />
+				<number name="$responseTime" optional="yes" oncondition="success" />
 				<boolean name="~return~" value="false" optional="yes" oncondition="failure" />
 			</out>
 		</io>
 	</fusedoc>
 	*/
-	public static function getPage($pageURL, &$pageHeader=null, &$pageLoadTime=null) {
+	public static function httpRequest($url, $method='GET', $fields=null, &$responseHeader=null, &$responseTime=null) {
+		$method = strtoupper($method);
+		// validation
+		if ( !in_array($method, array('GET','POST','PUT','DELETE')) ) {
+			self::$error = "Util::httpRequest() - Invalid method ({$method})";
+			return false;
+		}
+		// merge params into url (when necessary)
+		if ( $method != 'POST' ) {
+			$qs = !empty($fields) ? http_build_query($fields) : '';
+			if ( !empty($qs) ) $url .= ( strpos($url, '?') === false ) ? '?' : '&';
+			$url .= $qs;
+		}
 		// load page remotely
 		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $pageURL);
+		curl_setopt($ch, CURLOPT_URL, $url);
+		if ( $method == 'GET' ) {
+			curl_setopt($ch, CURLOPT_HTTPGET, true);
+		} elseif ( $method == 'POST' ) {
+			curl_setopt($ch, CURLOPT_POSTREDIR, 3);
+			curl_setopt($ch, CURLOPT_POST, true);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
+		} elseif ( $method == 'PUT' ) {
+			curl_setopt($ch, CURLOPT_PUT, true);
+			curl_setopt($ch, CURLOPT_INFILE, 1);
+			curl_setopt($ch, CURLOPT_INFILESIZE, 1);
+		} elseif ( $method == 'DELETE' ) {
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+		}
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-//		curl_setopt($ch, CURLOPT_POSTREDIR, 3);
-		curl_setopt($ch, CURLOPT_VERBOSE, 1);
-		curl_setopt($ch, CURLOPT_HEADER, 1);
+		curl_setopt($ch, CURLOPT_VERBOSE, true);
+		curl_setopt($ch, CURLOPT_HEADER, true);
 		// get response
 		$response = curl_exec($ch);
 		$httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -136,6 +161,9 @@ class Util {
 		// success!
 		return $pageBody;
 	}
+	// alias methods
+	public static function getPage($url, $fields=null, &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET', $url, $fields, $responseHeader, $responseTime); }
+	public static function postPage($url, $fields=null, &$responseHeader=null, &$responseTime=null) { return self::httpRequest('POST', $url, $fields, $responseHeader, $responseTime); }
 
 
 
