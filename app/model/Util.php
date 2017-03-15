@@ -86,6 +86,60 @@ class Util {
 	/**
 	<fusedoc>
 		<description>
+			get page content remotely
+		</description>
+		<io>
+			<in>
+				<string name="$pageURL" />
+				<reference name="&$pageHeader" />
+				<reference name="&$pageLoadTime" />
+			</in>
+			<out>
+				<string name="~return~" optional="yes" oncondition="success" comments="page response" />
+				<string name="$pageHeader" optional="yes" oncondition="success" />
+				<number name="$pageLoadTime" optional="yes" oncondition="success" />
+				<boolean name="~return~" value="false" optional="yes" oncondition="failure" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function getPage($pageURL, &$pageHeader=null, &$pageLoadTime=null) {
+		// load page remotely
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $pageURL);
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+//		curl_setopt($ch, CURLOPT_POSTREDIR, 3);
+		curl_setopt($ch, CURLOPT_VERBOSE, 1);
+		curl_setopt($ch, CURLOPT_HEADER, 1);
+		// get response
+		$response = curl_exec($ch);
+		$httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		$headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+		$pageHeader = substr($response, 0, $headerSize);
+		$pageLoadTime = curl_getinfo($ch, CURLINFO_TOTAL_TIME);
+		$pageBody = substr($response, $headerSize);
+		if ( $response === false ) $pageError = curl_error($ch);
+		curl_close($ch);
+		// validate response
+		if ( isset($pageError) ) {
+			self::$error = $pageError;
+			return false;
+		} elseif ( $httpStatus != 200 ) {
+			self::$error = $pageHeader;
+			return false;
+		}
+		// success!
+		return $pageBody;
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
 			convert html into formatted plain text
 			===> require Html2Text library
 			===> https://github.com/mtibben/html2text
