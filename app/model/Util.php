@@ -334,7 +334,7 @@ class Util {
 			self::$error = "Util::sendMail() - Exception ({$e->getMessage()})";
 			return false;
 		}
-		// result
+		// done!
 		return $result;
 	}
 	// alias method
@@ -381,7 +381,7 @@ class Util {
 			self::$error = "Util::xslt() - {$e->getMessage()}";
 			return false;
 		}
-		// result
+		// done!
 		return $result;
 	}
 
