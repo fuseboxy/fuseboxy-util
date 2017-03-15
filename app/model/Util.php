@@ -153,10 +153,6 @@ class Util {
 		if ( isset($pageError) ) {
 			self::$error = $pageError;
 			return false;
-		} elseif ( $httpStatus != 200 ) {
-			$lines = explode("\n", $pageHeader);
-			self::$error = $lines[0];
-			return false;
 		}
 		// success!
 		return $pageBody;
