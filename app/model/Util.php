@@ -105,7 +105,7 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function httpRequest($url, $method='GET', $fields=null, &$responseHeader=null, &$responseTime=null) {
+	public static function httpRequest($method='GET', $url, $fields=null, &$responseHeader=null, &$responseTime=null) {
 		$method = strtoupper($method);
 		// validation
 		if ( !in_array($method, array('GET','POST','PUT','DELETE')) ) {
