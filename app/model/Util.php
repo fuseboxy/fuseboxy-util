@@ -86,6 +86,47 @@ class Util {
 	/**
 	<fusedoc>
 		<description>
+			convert html into formatted plain text
+			===> require Html2Text library
+			===> https://github.com/mtibben/html2text
+		</description>
+		<io>
+			<in>
+				<string name="$html" />
+			</in>
+			<out>
+				<string name="~return~" optional="yes" oncondition="success" />
+				<boolean name="~return~" value="false" optional="yes" oncondition="failure" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function html2text($html) {
+		// load library
+		$classPath = dirname($fusebox->config['appPath']).'/lib/html2text/4.0.1/Html2Text.php';
+		if ( !class_exists('Html2Text') and !file_exists($classPath) ) {
+			self::$error = 'Util::html2text() - Library Html2Text is required';
+			return false;
+		}
+		require_once($classPath);
+		// perform conversion
+		$prepared = new Html2Text(self::minifyHtml($html));
+		$result = $prepared->getText();
+		// check result
+		if ( $result === false ) {
+			self::$error = "Util::html2text() - Error occurred while converting HTML to text";
+			return false;
+		}
+		// success!
+		return $result;
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
 			remove space between tags
 		</description>
 		<io>
