@@ -144,8 +144,8 @@ class Util {
 		$response = curl_exec($ch);
 		$httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		$headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-		$pageHeader = substr($response, 0, $headerSize);
-		$pageLoadTime = curl_getinfo($ch, CURLINFO_TOTAL_TIME);
+		$responseHeader = substr($response, 0, $headerSize);
+		$responseTime = curl_getinfo($ch, CURLINFO_TOTAL_TIME);
 		$pageBody = substr($response, $headerSize);
 		if ( $response === false ) $pageError = curl_error($ch);
 		curl_close($ch);
