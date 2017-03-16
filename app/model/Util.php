@@ -183,6 +183,7 @@ class Util {
 	</fusedoc>
 	*/
 	public static function html2text($html) {
+		global $fusebox;
 		// load library
 		$classPath = dirname($fusebox->config['appPath']).'/lib/html2text/4.0.1/Html2Text.php';
 		if ( !class_exists('Html2Text') and !file_exists($classPath) ) {
@@ -191,7 +192,7 @@ class Util {
 		}
 		require_once($classPath);
 		// perform conversion
-		$prepared = new Html2Text(self::minifyHtml($html));
+		$prepared = new Html2Text\Html2Text(self::minifyHtml($html));
 		$result = $prepared->getText();
 		// check result
 		if ( $result === false ) {
