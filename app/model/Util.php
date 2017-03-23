@@ -1,4 +1,14 @@
-<?php
+<?php /*
+<fusedoc>
+	<history version="1.1">
+		- create html2text() method
+		- create httpRequest(), getPage(), and postPage() methods
+	</history>
+	<history version="1.0">
+		- first commit
+	</history>
+</fusedoc>
+*/
 class Util {
 
 
@@ -81,6 +91,8 @@ class Util {
 	public static function encrypt($data) { return self::crypt('encrypt', $data); }
 
 
+
+
 	/**
 	<fusedoc>
 		<description>
@@ -140,6 +152,7 @@ class Util {
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 		curl_setopt($ch, CURLOPT_VERBOSE, true);
 		curl_setopt($ch, CURLOPT_HEADER, true);
+		curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.2; WOW64; rv:17.0) Gecko/20100101 Firefox/17.0');
 		// get response
 		$response = curl_exec($ch);
 		$httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
