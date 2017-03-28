@@ -171,8 +171,8 @@ class Util {
 		return $pageBody;
 	}
 	// alias methods
-	public static function getPage($url, $fields=null, &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET', $url, $fields, $responseHeader, $responseTime); }
-	public static function postPage($url, $fields=null, &$responseHeader=null, &$responseTime=null) { return self::httpRequest('POST', $url, $fields, $responseHeader, $responseTime); }
+	public static function getPage($url, &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET', $url, $fields, $responseHeader, $responseTime); }
+	public static function postPage($url, $fields=array(), &$responseHeader=null, &$responseTime=null) { return self::httpRequest('POST', $url, $fields, $responseHeader, $responseTime); }
 
 
 
