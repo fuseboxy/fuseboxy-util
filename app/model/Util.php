@@ -1,5 +1,12 @@
 <?php /*
 <fusedoc>
+	<history version="1.1.1">
+		- fix bug in html2text
+		- fix bug in httpRequest regarding responseHeader and responseTime
+		- send fake user-agent info to target server when httpRequest
+		- get argument of getPage
+		- fix default argument bug in postPage
+	</history>
 	<history version="1.1">
 		- create html2text() method
 		- create httpRequest(), getPage(), and postPage() methods
@@ -171,7 +178,7 @@ class Util {
 		return $pageBody;
 	}
 	// alias methods
-	public static function getPage($url, &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET', $url, $fields, $responseHeader, $responseTime); }
+	public static function getPage($url, &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET', $url, null, $responseHeader, $responseTime); }
 	public static function postPage($url, $fields=array(), &$responseHeader=null, &$responseTime=null) { return self::httpRequest('POST', $url, $fields, $responseHeader, $responseTime); }
 
 
