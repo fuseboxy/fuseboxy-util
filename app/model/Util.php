@@ -124,7 +124,7 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function httpRequest($method='GET', $url, $fields=null, &$responseHeader=null, &$responseTime=null) {
+	public static function httpRequest($method='GET', $url, $fields=array(), &$responseHeader=null, &$responseTime=null) {
 		$method = strtoupper($method);
 		// validation
 		if ( !in_array($method, array('GET','POST','PUT','DELETE')) ) {
@@ -178,7 +178,7 @@ class Util {
 		return $pageBody;
 	}
 	// alias methods
-	public static function getPage($url, &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET', $url, null, $responseHeader, $responseTime); }
+	public static function getPage ($url,                  &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET',  $url, null,    $responseHeader, $responseTime); }
 	public static function postPage($url, $fields=array(), &$responseHeader=null, &$responseTime=null) { return self::httpRequest('POST', $url, $fields, $responseHeader, $responseTime); }
 
 
