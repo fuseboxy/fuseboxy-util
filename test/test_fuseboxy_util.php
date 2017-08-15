@@ -18,13 +18,37 @@ class TestFuseboxyUtil extends UnitTestCase {
 	}
 
 
-	function test__crypt(){}
+	function test__decrypt(){
+		$data = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+		$encrypted = Util::encrypt($data);
+		$decrypted = Util::decrypt($encrypted);
+		$this->assertTrue( $decrypted == $data );
+		$this->assertTrue( $decrypted != $encrypted );
+	}
 
 
-	function test__decrypt(){}
-
-
-	function test__encrypt(){}
+	function test__encrypt(){
+		global $fusebox;
+		$data = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+		// encrypt by default settings
+		$resultDefault = Util::encrypt($data);
+		$this->assertTrue( $resultDefault != $data );
+		// custom key
+		$fusebox->config['encryptKey'] = '1234567890abcdef';
+		$resultCustomKey = Util::encrypt($data);
+		$this->assertTrue( $resultDefault != $resultCustomKey );
+		unset($fusebox->config['encryptKey']);
+		// custom cipher
+		$fusebox->config['encryptCipher'] = MCRYPT_CAST_256;
+		$resultCustomCipher = Util::encrypt($data);
+		$this->assertTrue( $resultDefault != $resultCustomCipher );
+		unset($fusebox->config['encryptCipher']);
+		// custom mode
+		/*$fusebox->config['encryptMode'] = MCRYPT_MODE_NOFB;
+		$resultCustomMode = Util::encrypt($data);
+		$this->assertTrue( $resultDefault != $resultCustomMode );
+		unset($fusebox->config['encryptMode']);*/
+	}
 
 
 	function test__httpRequest(){
