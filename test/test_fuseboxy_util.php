@@ -37,31 +37,35 @@ class TestFuseboxyUtil extends UnitTestCase {
 
 
 	function test__html2text(){
-		$html = file_get_contents('utility-util/hello_world.html');
+		$html = file_get_contents('utility-util/unit_test.html');
 		// transform and check
 		$result = Util::html2text($html);
 		$this->assertTrue( !empty($result) );
 		// content still here
+		$this->assertPattern('/Unit Test/i', $result);
 		$this->assertPattern('/Hello World/i', $result);
 		// no more tags
 		$this->assertNoPattern('/<html>/i', $result);
 		$this->assertNoPattern('/<body>/i', $result);
 		$this->assertNoPattern('/<h1>/i', $result);
+		$this->assertNoPattern('/<hr>/i', $result);
 	}
 
 
 	function test__minifyHtml(){
-		$html = file_get_contents('utility-util/hello_world.html');
+		$html = file_get_contents('utility-util/unit_test.html');
 		// transform and check
 		$result = Util::minifyHtml($html);
 		$this->assertTrue( !empty($result) );
 		$this->assertTrue( strlen($result) <= strlen($html) );
 		// content still here
+		$this->assertPattern('/Unit Test/i', $result);
 		$this->assertPattern('/Hello World/i', $result);
 		// tags still here
 		$this->assertPattern('/<html>/i', $result);
 		$this->assertPattern('/<body>/i', $result);
 		$this->assertPattern('/<h1>/i', $result);
+		$this->assertPattern('/<hr>/i', $result);
 		// no more space between tags
 		$this->assertPattern('/></', $result);
 		$this->assertNoPattern('/>  </', $result);
