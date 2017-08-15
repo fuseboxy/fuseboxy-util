@@ -313,6 +313,14 @@ class Util {
 			self::$error = 'Util::sendMail() - Mail recipient was not specified';
 			return false;
 		}
+		if ( !isset($mail['subject']) ) {
+			self::$error = 'Util::sendMail() - Mail subject was not specified';
+			return false;
+		}
+		if ( !isset($mail['body']) ) {
+			self::$error = 'Util::sendMail() - Mail body was not specified';
+			return false;
+		}
 		// start...
 		try {
 			// init mail object
