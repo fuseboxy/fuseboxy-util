@@ -37,24 +37,36 @@ class TestFuseboxyUtil extends UnitTestCase {
 
 
 	function test__html2text(){
-		$html = '<html><body><h1>I am a BOY</h1></body></html>';
+		$html = file_get_contents('utility-util/hello_world.html');
 		// transform and check
 		$result = Util::html2text($html);
 		$this->assertTrue( !empty($result) );
-		$this->assertPattern('/I AM A BOY/i', $result);
+		// content still here
+		$this->assertPattern('/Hello World/i', $result);
+		// no more tags
+		$this->assertNoPattern('/<html>/i', $result);
+		$this->assertNoPattern('/<body>/i', $result);
+		$this->assertNoPattern('/<h1>/i', $result);
 	}
 
 
 	function test__minifyHtml(){
-		$html = '<html> <body>  <b>Hello World</b>  </body> </html>';
+		$html = file_get_contents('utility-util/hello_world.html');
 		// transform and check
 		$result = Util::minifyHtml($html);
 		$this->assertTrue( !empty($result) );
 		$this->assertTrue( strlen($result) <= strlen($html) );
+		// content still here
+		$this->assertPattern('/Hello World/i', $result);
+		// tags still here
+		$this->assertPattern('/<html>/i', $result);
+		$this->assertPattern('/<body>/i', $result);
+		$this->assertPattern('/<h1>/i', $result);
+		// no more space between tags
+		$this->assertPattern('/></', $result);
 		$this->assertNoPattern('/>  </', $result);
 		$this->assertNoPattern('/> </', $result);
-		$this->assertPattern('/></', $result);
-		$this->assertPattern('/Hello World/i', $result);
+		$this->assertNoPattern("/>\n</", $result);
 	}
 
 
@@ -62,35 +74,8 @@ class TestFuseboxyUtil extends UnitTestCase {
 
 
 	function test__xslt(){
-		$xml = '<?xml version="1.0" encoding="UTF-8"?>
-			<recordset>
-				<row>
-					<id>1</id>
-					<name>unit-test</name>
-					<remark>Unit Test</remark>
-				</row>
-				<row>
-					<id>2</id>
-					<name>foo-bar</name>
-					<remark>Foo Bar</remark>
-				</row>
-			</recordset>
-		';
-		$xsl = '<?xml version="1.0" encoding="UTF-8"?>
-			<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-			<xsl:template match="/">
-			<html>
-			<body>
-				<ul>
-					<xsl:for-each select="recordset/row">
-						<li><xsl:value-of select="id" />|<xsl:value-of select="name" />|<xsl:value-of select="remark" /></li>
-					</xsl:for-each>
-				</ul>
-			</body>
-			</html>
-			</xsl:template>
-			</xsl:stylesheet>
-		';
+		$xml = file_get_contents('utility-util/unit_test.xml');
+		$xsl = file_get_contents('utility-util/unit_test.xsl');
 		// transform and check
 		$result = Util::xslt($xml, $xsl);
 		$this->assertTrue( !empty($result) );
