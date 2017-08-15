@@ -310,7 +310,7 @@ class Util {
 			return false;
 		}
 		if ( !isset($mail['to']) ) {
-			self::$error = 'Util::sendMail() - Mail receipient was not specified';
+			self::$error = 'Util::sendMail() - Mail recipient was not specified';
 			return false;
 		}
 		// start...
