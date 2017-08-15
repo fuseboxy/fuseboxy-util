@@ -160,7 +160,45 @@ class TestFuseboxyUtil extends UnitTestCase {
 	}
 
 
-	function test__sendMail(){}
+	function test__sendMail(){
+		global $fusebox;
+		$data = array();
+		// check library
+		$original = $fusebox->config['appPath'];
+		$fusebox->config['appPath'] = '/invalid/app/path';
+		$result = Util::sendMail($data);
+		$this->assertFalse( $result );
+		$this->assertPattern('/library phpmailer is required/i', Util::error());
+		$fusebox->config['appPath'] = $original;
+		// check config
+		$result = Util::sendMail($data);
+		$this->assertFalse( $result );
+		$this->assertPattern('/smtp config is required/i', Util::error());
+		$fusebox->config['smtp'] = include __DIR__.'/utility-util/config/smtp_config.php';
+		// check arguments : sender
+		$result = Util::sendMail($data);
+		$this->assertFalse( $result );
+		$this->assertPattern('/mail sender was not specified/i', Util::error());
+		$data['from'] = 'foo@bar.com';
+		// check arguments : recipient
+		$result = Util::sendMail($data);
+		$this->assertFalse( $result );
+		$this->assertPattern('/mail recipient was not specified/i', Util::error());
+		$data['to'] = 'unit@test.com';
+		// check arguments : subject
+		$result = Util::sendMail($data);
+		$this->assertFalse( $result );
+		$this->assertPattern('/mail subject/i', Util::error());
+		$data['subject'] = 'unit test';
+		// check arguments : body
+		$result = Util::sendMail($data);
+		$this->assertFalse( $result );
+		$this->assertPattern('/mail body/i', Util::error());
+		$data['body'] = 'foobar';
+		// smtp connection failed
+		$result = Util::sendMail($data);
+		$this->assertFalse( $result );
+	}
 
 
 	function test__xslt(){
