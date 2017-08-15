@@ -198,6 +198,8 @@ class TestFuseboxyUtil extends UnitTestCase {
 		// smtp connection failed
 		$result = Util::sendMail($data);
 		$this->assertFalse( $result );
+		// check method alias
+		$this->assertTrue( Util::sendMail($data) == Util::sendEmail($data) );
 	}
 
 
