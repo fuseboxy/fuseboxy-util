@@ -1,5 +1,9 @@
 <?php /*
 <fusedoc>
+	<history version="1.1.2">
+		- fix bug in httpRequest
+		- rename crypt method to make it looks private
+	</history>
 	<history version="1.1.1">
 		- fix bug in html2text
 		- fix bug in httpRequest regarding responseHeader and responseTime
@@ -48,7 +52,7 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	private static function crypt($action, $data) {
+	private static function __crypt($action, $data) {
 		global $fusebox;
 		// validation
 		try {
@@ -94,8 +98,8 @@ class Util {
 		return $result;
 	}
 	// alias methods
-	public static function decrypt($data) { return self::crypt('decrypt', $data); }
-	public static function encrypt($data) { return self::crypt('encrypt', $data); }
+	public static function decrypt($data) { return self::__crypt('decrypt', $data); }
+	public static function encrypt($data) { return self::__crypt('encrypt', $data); }
 
 
 
