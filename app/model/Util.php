@@ -147,9 +147,7 @@ class Util {
 			curl_setopt($ch, CURLOPT_POST, true);
 			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
 		} elseif ( $method == 'PUT' ) {
-			curl_setopt($ch, CURLOPT_PUT, true);
-			curl_setopt($ch, CURLOPT_INFILE, 1);
-			curl_setopt($ch, CURLOPT_INFILESIZE, 1);
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
 		} elseif ( $method == 'DELETE' ) {
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
 		}
