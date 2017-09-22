@@ -1,5 +1,8 @@
 <?php /*
 <fusedoc>
+	<history version="1.1.3">
+		- apply cookie file to httpRequest method to avoid redirect loop when target server check cookies
+	</history>
 	<history version="1.1.2">
 		- fix bug in httpRequest
 		- rename crypt method to make it looks private
@@ -141,6 +144,8 @@ class Util {
 			if ( !empty($qs) ) $url .= ( strpos($url, '?') === false ) ? '?' : '&';
 			$url .= $qs;
 		}
+		// apply cookie file (to avoid redirect loop when target server check cookies)
+		$cookie_file = sys_get_temp_dir().'/cookies/'.md5($_SERVER['REMOTE_ADDR']).'.txt';
 		// load page remotely
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
@@ -155,6 +160,8 @@ class Util {
 		} elseif ( $method == 'DELETE' ) {
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
 		}
+		curl_setopt($ch, CURLOPT_COOKIEFILE, $cookie_file);
+		curl_setopt($ch, CURLOPT_COOKIEJAR, $cookie_file);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
