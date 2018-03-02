@@ -1,5 +1,8 @@
 <?php /*
 <fusedoc>
+	<history version="1.2">
+		- apply [httpProxy] and [httpsProxy] to httpRequest method
+	</history>
 	<history version="1.1.3">
 		- apply cookie file to httpRequest method to avoid redirect loop when target server check cookies
 	</history>
@@ -114,6 +117,10 @@ class Util {
 		</description>
 		<io>
 			<in>
+				<structure name="config" scope="$fusebox">
+					<string name="httpProxy" optional="yes" />
+					<string name="httpsProxy" optional="yes" />
+				</structure>
 				<string name="$url" />
 				<string name="$method" default="GET" comments="GET|POST|PUT|DELETE" />
 				<structure name="$fields">
@@ -132,6 +139,8 @@ class Util {
 	</fusedoc>
 	*/
 	public static function httpRequest($method='GET', $url, $fields=array(), &$responseHeader=null, &$responseTime=null) {
+		global $fusebox;
+		// RESTful methods
 		$method = strtoupper($method);
 		// validation
 		if ( !in_array($method, array('GET','POST','PUT','DELETE')) ) {
@@ -169,6 +178,21 @@ class Util {
 		curl_setopt($ch, CURLOPT_VERBOSE, true);
 		curl_setopt($ch, CURLOPT_HEADER, true);
 		curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.2; WOW64; rv:17.0) Gecko/20100101 Firefox/17.0');
+		// apply proxy (when necessary)
+		if ( parse_url($url, PHP_URL_SCHEME) == 'https' and !empty($fusebox->config['httpsProxy']) ) {
+			$proxyConfig = $fusebox->config['httpsProxy'];
+		} elseif ( !empty($fusebox->config['httpProxy']) ) {
+			$proxyConfig = $fusebox->config['httpProxy'];
+		}
+		if ( isset($proxyConfig) ) {
+			$proxy = parse_url($proxyConfig);
+			$proxyAuth = '';
+			if ( !empty($proxy['user']) ) $proxyAuth .= $proxy['user'];
+			if ( !empty($proxy['pass']) ) $proxyAuth .= ":{$proxy['pass']}";
+			$proxyURL = !empty($proxyAuth) ? str_replace("{$proxyAuth}@", '', $proxyConfig) : $proxyConfig;
+			curl_setopt($ch, CURLOPT_PROXY, $proxyURL);
+			if ( !empty($proxyAuth) ) curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxyAuth);
+		}
 		// get response
 		$response = curl_exec($ch);
 		$httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
