@@ -124,6 +124,13 @@ class TestFuseboxyUtil extends UnitTestCase {
 
 	function test__html2text(){
 		$html = file_get_contents('utility-util/unit_test.html');
+		// check library
+		$original = Util::$classPath['html2text'];
+		Util::$classPath['html2text'] = '/invalid/class/path';
+		$result = Util::html2text($html);
+		$this->assertFalse( $result );
+		$this->assertPattern('/html2text library is required/i', Util::error());
+		Util::$classPath['html2text'] = $original;
 		// transform and check
 		$result = Util::html2text($html);
 		$this->assertTrue( !empty($result) );
