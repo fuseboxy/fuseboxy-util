@@ -436,4 +436,4 @@ class Util {
 	}
 
 
-} // Util
+} // class
