@@ -164,12 +164,12 @@ class TestFuseboxyUtil extends UnitTestCase {
 		global $fusebox;
 		$data = array();
 		// check library
-		$original = $fusebox->config['appPath'];
-		$fusebox->config['appPath'] = '/invalid/app/path';
+		$original = Util::$classPath['phpmailer'];
+		Util::$classPath['phpmailer'] = '/invalid/class/path';
 		$result = Util::sendMail($data);
 		$this->assertFalse( $result );
-		$this->assertPattern('/library phpmailer is required/i', Util::error());
-		$fusebox->config['appPath'] = $original;
+		$this->assertPattern('/phpmailer library is required/i', Util::error());
+		Util::$classPath['phpmailer'] = $original;
 		// check config
 		$result = Util::sendMail($data);
 		$this->assertFalse( $result );

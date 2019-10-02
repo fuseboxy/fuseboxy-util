@@ -1,35 +1,14 @@
-<?php /*
-<fusedoc>
-	<history version="1.3">
-		- add [headers] to httpRequest() method
-	</history>
-	<history version="1.2">
-		- apply [httpProxy] and [httpsProxy] to httpRequest method
-	</history>
-	<history version="1.1.3">
-		- apply cookie file to httpRequest method to avoid redirect loop when target server check cookies
-	</history>
-	<history version="1.1.2">
-		- fix bug in httpRequest
-		- rename crypt method to make it looks private
-	</history>
-	<history version="1.1.1">
-		- fix bug in html2text
-		- fix bug in httpRequest regarding responseHeader and responseTime
-		- send fake user-agent info to target server when httpRequest
-		- get argument of getPage
-		- fix default argument bug in postPage
-	</history>
-	<history version="1.1">
-		- create html2text() method
-		- create httpRequest(), getPage(), and postPage() methods
-	</history>
-	<history version="1.0">
-		- first commit
-	</history>
-</fusedoc>
-*/
+<?php
 class Util {
+
+
+	// default library path
+	public static $classPath = array(
+		'phpmailer' => __DIR__.'/../../lib/phpmailer/5.2.22/PHPMailerAutoload.php',
+		'html2text' => __DIR__.'/../../lib/html2text/4.0.1/Html2Text.php',
+	);
+
+
 
 
 	// get (latest) error message
@@ -249,12 +228,11 @@ class Util {
 	public static function html2text($html) {
 		global $fusebox;
 		// load library
-		$classPath = dirname($fusebox->config['appPath']).'/lib/html2text/4.0.1/Html2Text.php';
-		if ( !class_exists('Html2Text') and !file_exists($classPath) ) {
-			self::$error = 'Util::html2text() - Library Html2Text is required';
+		if ( !class_exists('Html2Text') and !file_exists( self::$classPath['html2text'] ) ) {
+			self::$error = 'Util::html2text() - Html2Text library is required';
 			return false;
 		}
-		require_once($classPath);
+		require_once( self::$classPath['html2text'] );
 		// perform conversion
 		$prepared = new Html2Text\Html2Text(self::minifyHtml($html));
 		$result = $prepared->getText();
@@ -334,12 +312,11 @@ class Util {
 	public static function sendMail($mail) {
 		global $fusebox;
 		// load library
-		$classPath = dirname($fusebox->config['appPath']).'/lib/phpmailer/5.2.22/PHPMailerAutoload.php';
-		if ( !class_exists('PHPMailer') and !file_exists($classPath) ) {
-			self::$error = 'Util::sendMail() - Library PHPMailer is required';
+		if ( !class_exists('PHPMailer') and !file_exists( self::$classPath['phpmailer'] ) ) {
+			self::$error = 'Util::sendMail() - PHPMailer library is required';
 			return false;
 		}
-		require_once($classPath);
+		require_once( self::$classPath['phpmailer'] );
 		// load config (when necessary)
 		if ( empty($fusebox->config['smtp']) ) {
 			self::$error = 'Util::sendMail() - SMTP config is required';
