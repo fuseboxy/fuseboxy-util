@@ -1,5 +1,8 @@
 <?php /*
 <fusedoc>
+	<history version="1.3">
+		- add [headers] to httpRequest() method
+	</history>
 	<history version="1.2">
 		- apply [httpProxy] and [httpsProxy] to httpRequest method
 	</history>
@@ -126,6 +129,9 @@ class Util {
 				<structure name="$fields">
 					<string name="~fieldName~" comments="no url-encoded" />
 				</structure>
+				<structure name="$headers">
+					<string name="~headerName~" />
+				</structure>
 				<reference name="&$responseHeader" />
 				<reference name="&$responseTime" />
 			</in>
@@ -138,7 +144,7 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function httpRequest($method='GET', $url, $fields=array(), &$responseHeader=null, &$responseTime=null) {
+	public static function httpRequest($method='GET', $url, $fields=array(), $headers=array(), &$responseHeader=null, &$responseTime=null) {
 		global $fusebox;
 		// RESTful methods
 		$method = strtoupper($method);
@@ -153,6 +159,10 @@ class Util {
 			if ( !empty($qs) ) $url .= ( strpos($url, '?') === false ) ? '?' : '&';
 			$url .= $qs;
 		}
+		// transform headers
+		$arr = $headers;
+		$headers = array();
+		foreach ( $arr as $key => $val ) $headers[] = "{$key} : {$val}";
 		// apply cookie file (to avoid redirect loop when target server check cookies)
 		$cookie_file = sys_get_temp_dir().'/cookies/'.md5($_SERVER['REMOTE_ADDR']).'.txt';
 		// load page remotely
@@ -169,6 +179,7 @@ class Util {
 		} elseif ( $method == 'DELETE' ) {
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
 		}
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		curl_setopt($ch, CURLOPT_COOKIEFILE, $cookie_file);
 		curl_setopt($ch, CURLOPT_COOKIEJAR, $cookie_file);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
@@ -211,8 +222,8 @@ class Util {
 		return $pageBody;
 	}
 	// alias methods
-	public static function getPage ($url,                  &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET',  $url, null,    $responseHeader, $responseTime); }
-	public static function postPage($url, $fields=array(), &$responseHeader=null, &$responseTime=null) { return self::httpRequest('POST', $url, $fields, $responseHeader, $responseTime); }
+	public static function getPage ($url,                  &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET',  $url, array(), array(), $responseHeader, $responseTime); }
+	public static function postPage($url, $fields=array(), &$responseHeader=null, &$responseTime=null) { return self::httpRequest('POST', $url, $fields, array(), $responseHeader, $responseTime); }
 
 
 
