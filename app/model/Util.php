@@ -40,7 +40,7 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	private static function __crypt($action, $data) {
+	private static function crypt($action, $data) {
 		global $fusebox;
 		// validation
 		try {
@@ -86,8 +86,8 @@ class Util {
 		return $result;
 	}
 	// alias methods
-	public static function decrypt($data) { return self::__crypt('decrypt', $data); }
-	public static function encrypt($data) { return self::__crypt('encrypt', $data); }
+	public static function decrypt($data) { return self::crypt('decrypt', $data); }
+	public static function encrypt($data) { return self::crypt('encrypt', $data); }
 
 
 
