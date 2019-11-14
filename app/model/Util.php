@@ -26,9 +26,11 @@ class Util {
 		<io>
 			<in>
 				<structure name="config" scope="$fusebox">
-					<string name="encryptKey" optional="yes" />
-					<string name="encryptCipher" optional="yes" />
-					<string name="encryptMode" optional="yes" />
+					<structure name="encrypt">
+						<string name="key" />
+						<string name="cipher" optional="yes" default="~MCRYPT_RIJNDAEL_256~" />
+						<string name="mode" optional="yes" default="~MCRYPT_MODE_ECB~" />
+					</structure>
 				</structure>
 				<string name="$action" comments="encrypt|decrypt" />
 				<string name="$data" />
@@ -43,11 +45,15 @@ class Util {
 	private static function crypt($action, $data) {
 		global $fusebox;
 		// validation
+		if ( !isset($fusebox->config['encrypt']['key']) ) {
+			self::$error = 'Util::crypt() - Encrypt key is required';
+			return false;
+		}
+		// defult config
+		$cipher = isset($fusebox->config['encrypt']['cipher']) ? $fusebox->config['encrypt']['cipher'] :  MCRYPT_RIJNDAEL_256;
+		$mode   = isset($fusebox->config['encrypt']['mode'])   ? $fusebox->config['encrypt']['mode']   :  MCRYPT_MODE_ECB;
+		// start
 		try {
-			// defult config
-			$key    = isset($fusebox->config['encryptKey'])    ? $fusebox->config['encryptKey']    : 'ORSw2K365dzVn5xc17E38m7pv7GS3xkc';
-			$cipher = isset($fusebox->config['encryptCipher']) ? $fusebox->config['encryptCipher'] :  MCRYPT_RIJNDAEL_256;
-			$mode   = isset($fusebox->config['encryptMode'])   ? $fusebox->config['encryptMode']   :  MCRYPT_MODE_ECB;
 			// url-friendly special character for base64 string replacement
 			// ===> replace plus-sign (+), slash (/), and equal-sign (=) in base64 string
 			// ===> replace by underscore (_), dash (-), and dot (.)
