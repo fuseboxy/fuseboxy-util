@@ -43,15 +43,15 @@ class Util {
 	</fusedoc>
 	*/
 	private static function crypt($action, $data) {
-		global $fusebox;
+		$encryptConfig = F::config('encrypt');
 		// validation
-		if ( !isset($fusebox->config['encrypt']['key']) ) {
+		if ( empty($encryptConfig['key']) ) {
 			self::$error = 'Util::crypt() - Encrypt key is required';
 			return false;
 		}
 		// defult config
-		$cipher = isset($fusebox->config['encrypt']['cipher']) ? $fusebox->config['encrypt']['cipher'] :  MCRYPT_RIJNDAEL_256;
-		$mode   = isset($fusebox->config['encrypt']['mode'])   ? $fusebox->config['encrypt']['mode']   :  MCRYPT_MODE_ECB;
+		$cipher = empty($encryptConfig['cipher']) ? $encryptConfig['cipher'] : MCRYPT_RIJNDAEL_256;
+		$mode   = empty($encryptConfig['mode'])   ? $encryptConfig['mode']   : MCRYPT_MODE_ECB;
 		// start
 		try {
 			// url-friendly special character for base64 string replacement
@@ -175,10 +175,10 @@ class Util {
 		curl_setopt($ch, CURLOPT_HEADER, true);
 		curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.2; WOW64; rv:17.0) Gecko/20100101 Firefox/17.0');
 		// apply proxy (when necessary)
-		if ( parse_url($url, PHP_URL_SCHEME) == 'https' and !empty($fusebox->config['httpsProxy']) ) {
-			$proxyConfig = $fusebox->config['httpsProxy'];
-		} elseif ( !empty($fusebox->config['httpProxy']) ) {
-			$proxyConfig = $fusebox->config['httpProxy'];
+		if ( parse_url($url, PHP_URL_SCHEME) == 'https' and !empty( F::config('httpsProxy') ) ) {
+			$proxyConfig = F::config('httpsProxy');
+		} elseif ( !empty( F::config('httpProxy') ) ) {
+			$proxyConfig = F::config('httpProxy');
 		}
 		if ( isset($proxyConfig) ) {
 			$proxy = parse_url($proxyConfig);
@@ -324,11 +324,11 @@ class Util {
 		}
 		require_once( self::$classPath['phpmailer'] );
 		// load config (when necessary)
-		if ( empty($fusebox->config['smtp']) ) {
+		$smtpConfig = F::config('smtp');
+		if ( empty($smtpConfig) ) {
 			self::$error = 'Util::sendMail() - SMTP config is required';
 			return false;
 		}
-		$smtp_config = $fusebox->config['smtp'];
 		// validation
 		if ( !isset($mail['from']) ) {
 			self::$error = 'Util::sendMail() - Mail sender was not specified';
@@ -353,13 +353,13 @@ class Util {
 			$mailer->CharSet = 'UTF-8';
 			// mail server settings
 			$mailer->IsSMTP();  // enable SMTP
-			if ( isset($smtp_config['debug'])    ) $mailer->SMTPDebug = $smtp_config['debug'];
-			if ( isset($smtp_config['auth'])     ) $mailer->SMTPAuth = $smtp_config['auth'];
-			if ( isset($smtp_config['secure'])   ) $mailer->SMTPSecure = $smtp_config['secure'];
-			if ( isset($smtp_config['host'])     ) $mailer->Host = $smtp_config['host'];
-			if ( isset($smtp_config['port'])     ) $mailer->Port = $smtp_config['port'];
-			if ( isset($smtp_config['username']) ) $mailer->Username = $smtp_config['username'];
-			if ( isset($smtp_config['password']) ) $mailer->Password = $smtp_config['password'];
+			if ( isset($smtpConfig['debug'])    ) $mailer->SMTPDebug  = $smtpConfig['debug'];
+			if ( isset($smtpConfig['auth'])     ) $mailer->SMTPAuth   = $smtpConfig['auth'];
+			if ( isset($smtpConfig['secure'])   ) $mailer->SMTPSecure = $smtpConfig['secure'];
+			if ( isset($smtpConfig['host'])     ) $mailer->Host       = $smtpConfig['host'];
+			if ( isset($smtpConfig['port'])     ) $mailer->Port       = $smtpConfig['port'];
+			if ( isset($smtpConfig['username']) ) $mailer->Username   = $smtpConfig['username'];
+			if ( isset($smtpConfig['password']) ) $mailer->Password   = $smtpConfig['password'];
 			// manipulate variables
 			if ( !is_array($mail['to']) ) {
 				$mail['to'] = array_filter(explode(';', str_replace(',', ';', str_replace(' ', '', $mail['to']))));
