@@ -28,8 +28,10 @@ class Util {
 				<structure name="config" scope="$fusebox">
 					<structure name="encrypt">
 						<string name="key" />
-						<string name="cipher" optional="yes" default="~MCRYPT_RIJNDAEL_256~" />
-						<string name="mode" optional="yes" default="~MCRYPT_MODE_ECB~" />
+						<string name="library" optional="yes" comments="mcrypt|openssl" />
+						<string name="cipher" optional="yes" default="~MCRYPT_RIJNDAEL_256~|AES-256-CBC" />
+						<string name="mode" optional="yes" default="~MCRYPT_MODE_ECB~|0" comments="used as options for openssl" />
+						<string name="iv" optional="yes" default="" />
 					</structure>
 				</structure>
 				<string name="$action" comments="encrypt|decrypt" />
@@ -50,8 +52,10 @@ class Util {
 			return false;
 		}
 		// defult config
-		$cipher = empty($encryptConfig['cipher']) ? $encryptConfig['cipher'] : MCRYPT_RIJNDAEL_256;
-		$mode   = empty($encryptConfig['mode'])   ? $encryptConfig['mode']   : MCRYPT_MODE_ECB;
+		if ( empty($encryptConfig['library']) ) $encryptConfig['library'] = ( PHP_MAJOR_VERSION < 7 ) ? 'mcrypt' : 'openssl';
+		if ( empty($encryptConfig['cipher'] ) ) $encryptConfig['cipher']  = ( $encryptConfig['library'] == 'mcrypt' ) ? MCRYPT_RIJNDAEL_256 : 'AES-256-CBC';
+		if ( empty($encryptConfig['mode']   ) ) $encryptConfig['mode']    = ( $encryptConfig['library'] == 'mcrypt' ) ? MCRYPT_MODE_ECB : 0;
+		if ( empty($encryptConfig['iv']     ) ) $encryptConfig['iv']      = ( $encryptConfig['library'] == 'mcrypt' ) ? null : '';
 		// start
 		try {
 			// url-friendly special character for base64 string replacement
@@ -60,25 +64,32 @@ class Util {
 			$url_unsafe = array('+','/','=');
 			$url_safe = array('_','-','.');
 			// validation & start
-			$result = $data;
 			if ( $action == 'encrypt' ) {
-				$result = mcrypt_encrypt($cipher, $key, $result, $mode);
+				if ( $encryptConfig['library'] == 'mcrypt' ) {
+					$data = mcrypt_encrypt($encryptConfig['cipher'], $encryptConfig['key'], $data, $encryptConfig['mode'], $encryptConfig['iv']);
+				} else {
+					$data = openssl_encrypt($data, $encryptConfig['cipher'], $encryptConfig['key'], $encryptConfig['mode'], $encryptConfig['iv']);
+				}
 				// base64-encode the encrypted data
-				$result = base64_encode($result);
+				$data = base64_encode($data);
 				// make the base64 string more url-friendly
 				for ( $i=0; $i<count($url_unsafe); $i++ ) {
-					$result = str_replace($url_unsafe[$i], $url_safe[$i], $result);
+					$data = str_replace($url_unsafe[$i], $url_safe[$i], $data);
 				}
 			} elseif ( $action == 'decrypt' ) {
 				for ( $i=0; $i<count($url_unsafe); $i++ ) {
-					$result = str_replace($url_safe[$i], $url_unsafe[$i], $result);
+					$data = str_replace($url_safe[$i], $url_unsafe[$i], $data);
 				}
-				$result = base64_decode($result);
-				$result = mcrypt_decrypt($cipher, $key, $result, $mode);
+				$data = base64_decode($data);
+				if ( $encryptConfig['library'] == 'mcrypt' ) {
+					$data = mcrypt_decrypt($encryptConfig['cipher'], $encryptConfig['key'], $data, $encryptConfig['mode'], $encryptConfig['iv']);
+				} else {
+					$data = openssl_decrypt($data, $encryptConfig['cipher'], $encryptConfig['key'], $encryptConfig['mode'], $encryptConfig['iv']);
+				}
 				// remove padded null characters
 				// ===> http://ca.php.net/manual/en/function.mcrypt-decrypt.php#54734
 				// ===> http://stackoverflow.com/questions/9781780/why-is-mcrypt-encrypt-putting-binary-characters-at-the-end-of-my-string
-				$result = rtrim($result, "\0");
+				$data = rtrim($data, "\0");
 			} else {
 				self::$error = "Util::crypt() - Invalid action [{$action}]";
 				return false;
@@ -89,7 +100,7 @@ class Util {
 			return false;
 		}
 		// done!
-		return $result;
+		return $data;
 	}
 	// alias methods
 	public static function decrypt($data) { return self::crypt('decrypt', $data); }
