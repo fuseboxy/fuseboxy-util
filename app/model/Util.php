@@ -4,7 +4,12 @@ class Util {
 
 	// default library path
 	public static $classPath = array(
-		'phpmailer' => __DIR__.'/../../lib/phpmailer/5.2.22/PHPMailerAutoload.php',
+		'phpmailer' => array(
+			__DIR__.'/../../lib/phpmailer/6.1.4/PHPMailer.php',
+			__DIR__.'/../../lib/phpmailer/6.1.4/Exception.php',
+			__DIR__.'/../../lib/phpmailer/6.1.4/SMTP.php',
+			__DIR__.'/../../lib/phpmailer/6.1.4/OAuth.php',
+		),
 	);
 
 
