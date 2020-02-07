@@ -4,8 +4,12 @@ class Util {
 
 	// default library path
 	public static $classPath = array(
-		'phpmailer' => __DIR__.'/../../lib/phpmailer/5.2.22/PHPMailerAutoload.php',
-		'html2text' => __DIR__.'/../../lib/html2text/4.0.1/Html2Text.php',
+		'phpmailer' => array(
+			__DIR__.'/../../lib/phpmailer/6.1.4/PHPMailer.php',
+			__DIR__.'/../../lib/phpmailer/6.1.4/Exception.php',
+			__DIR__.'/../../lib/phpmailer/6.1.4/SMTP.php',
+			__DIR__.'/../../lib/phpmailer/6.1.4/OAuth.php',
+		),
 	);
 
 
@@ -220,47 +224,6 @@ class Util {
 	// alias methods
 	public static function getPage ($url,                  &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET',  $url, array(), array(), $responseHeader, $responseTime); }
 	public static function postPage($url, $fields=array(), &$responseHeader=null, &$responseTime=null) { return self::httpRequest('POST', $url, $fields, array(), $responseHeader, $responseTime); }
-
-
-
-
-	/**
-	<fusedoc>
-		<description>
-			convert html into formatted plain text
-			===> require Html2Text library
-			===> https://github.com/mtibben/html2text
-		</description>
-		<io>
-			<in>
-				<string name="$html" />
-			</in>
-			<out>
-				<string name="~return~" optional="yes" oncondition="success" />
-				<boolean name="~return~" value="false" optional="yes" oncondition="failure" />
-			</out>
-		</io>
-	</fusedoc>
-	*/
-	public static function html2text($html) {
-		global $fusebox;
-		// load library
-		if ( !class_exists('Html2Text') and !file_exists( self::$classPath['html2text'] ) ) {
-			self::$error = 'Util::html2text() - Html2Text library is required';
-			return false;
-		}
-		require_once( self::$classPath['html2text'] );
-		// perform conversion
-		$prepared = new Html2Text\Html2Text(self::minifyHtml($html));
-		$result = $prepared->getText();
-		// check result
-		if ( $result === false ) {
-			self::$error = "Util::html2text() - Error occurred while converting HTML to text";
-			return false;
-		}
-		// success!
-		return $result;
-	}
 
 
 
