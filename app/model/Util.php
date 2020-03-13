@@ -2,13 +2,23 @@
 class Util {
 
 
-	// default library path
-	public static $classPath = array(
-		'phpmailer' => array(
+	// library requires by corresponding methods
+	public static $libPath = array(
+		'sendMail' => array(
 			__DIR__.'/../../lib/phpmailer/6.1.4/PHPMailer.php',
 			__DIR__.'/../../lib/phpmailer/6.1.4/Exception.php',
 			__DIR__.'/../../lib/phpmailer/6.1.4/SMTP.php',
 			__DIR__.'/../../lib/phpmailer/6.1.4/OAuth.php',
+		),
+		'phpQuery' => array(
+			__DIR__.'/../../lib/phpquery/2.0/phpQuery.php',
+		),
+		'md2html' => array(
+			__DIR__.'/../../lib/parsedown/1.7.4/Parsedown.php',
+		),
+		'xls2array' => array(
+			__DIR__.'/../../lib/simplexls/0.9.4/SimpleXLS.php',
+			__DIR__.'/../../lib/simplexlsx/0.8.9/SimpleXLSX.php',
 		),
 	);
 
