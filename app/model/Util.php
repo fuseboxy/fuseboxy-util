@@ -2,7 +2,7 @@
 class Util {
 
 
-	// library requires by corresponding methods
+	// properties : library for corresponding methods
 	public static $libPath = array(
 		'sendMail' => array(
 			__DIR__.'/../../lib/phpmailer/6.1.4/PHPMailer.php',
