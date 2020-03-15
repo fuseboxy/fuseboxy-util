@@ -1,6 +1,6 @@
 {
-	"name": "henrygotmojo/fuseboxy-util",
-	"description": "Fuseboxy Util",
+	"name": "fuseboxy/fuseboxy-util",
+	"description": "Fuseboxy Util - Tools Come in Handy",
 	"license": "MIT",
 	"require": {}
 }
