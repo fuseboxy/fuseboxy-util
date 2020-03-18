@@ -288,7 +288,7 @@ class Util {
 					</structure>
 				</structure>
 				<!-- parameter -->
-				<structure name="$mail">
+				<structure name="$param">
 					<datetime name="datetime" optional="yes" />
 					<string name="from_name" optional="yes" />
 					<string name="from" optional="yes" default="~smtp user~" />
@@ -306,7 +306,7 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function mail($mail) {
+	public static function mail($param) {
 		// load library files
 		if ( !class_exists('PHPMailer') ) {
 			foreach ( self::$libPath['mail'] as $path ) {
@@ -324,19 +324,19 @@ class Util {
 			return false;
 		}
 		// validation
-		if ( !isset($mail['from']) ) {
+		if ( !isset($param['from']) ) {
 			self::$error = 'Mail sender was not specified';
 			return false;
 		}
-		if ( !isset($mail['to']) ) {
+		if ( !isset($param['to']) ) {
 			self::$error = 'Mail recipient was not specified';
 			return false;
 		}
-		if ( !isset($mail['subject']) ) {
+		if ( !isset($param['subject']) ) {
 			self::$error = 'Mail subject was not specified';
 			return false;
 		}
-		if ( !isset($mail['body']) ) {
+		if ( !isset($param['body']) ) {
 			self::$error = 'Mail body was not specified';
 			return false;
 		}
@@ -355,27 +355,27 @@ class Util {
 			if ( isset($smtpConfig['username']) ) $mailer->Username   = $smtpConfig['username'];
 			if ( isset($smtpConfig['password']) ) $mailer->Password   = $smtpConfig['password'];
 			// manipulate variables
-			if ( !is_array($mail['to']) ) {
-				$mail['to'] = array_filter(explode(';', str_replace(',', ';', str_replace(' ', '', $mail['to']))));
+			if ( !is_array($param['to']) ) {
+				$param['to'] = array_filter(explode(';', str_replace(',', ';', str_replace(' ', '', $param['to']))));
 			}
-			if ( isset($mail['cc'])  and !is_array($mail['cc']) ) {
-				$mail['cc'] = array_filter(explode(';', str_replace(',', ';', str_replace(' ', '', $mail['cc']))));
+			if ( isset($param['cc'])  and !is_array($param['cc']) ) {
+				$param['cc'] = array_filter(explode(';', str_replace(',', ';', str_replace(' ', '', $param['cc']))));
 			}
-			if ( isset($mail['bcc']) and !is_array($mail['bcc']) ) {
-				$mail['bcc'] = array_filter(explode(';', str_replace(',', ';', str_replace(' ', '', $mail['bcc']))));
+			if ( isset($param['bcc']) and !is_array($param['bcc']) ) {
+				$param['bcc'] = array_filter(explode(';', str_replace(',', ';', str_replace(' ', '', $param['bcc']))));
 			}
 			// mail default value
-			if ( !isset($mail['from'])     ) $mail['from'] = $mailer->Username;
-			if ( !isset($mail['datetime']) ) $mail['datetime'] = time();
+			if ( !isset($param['from'])     ) $param['from'] = $mailer->Username;
+			if ( !isset($param['datetime']) ) $param['datetime'] = time();
 			// mail options
-			$mailer->From = $mail['from'];
-			if ( isset($mail['from_name']) ) $mailer->FromName = $mail['from_name'];
-			foreach ( $mail['to'] as $to ) $mailer->AddAddress($to);
-			if ( !empty($mail['cc'])  ) foreach ( $mail['cc']  as $cc  ) $mailer->AddCC($cc);
-			if ( !empty($mail['bcc']) ) foreach ( $mail['bcc'] as $bcc ) $mailer->AddBCC($bcc);
-			$mailer->IsHTML( isset($mail['isHTML']) ? $mail['isHTML'] : true );
-			$mailer->Subject = $mail['subject'];
-			$mailer->Body = $mail['body'];
+			$mailer->From = $param['from'];
+			if ( isset($param['from_name']) ) $mailer->FromName = $param['from_name'];
+			foreach ( $param['to'] as $to ) $mailer->AddAddress($to);
+			if ( !empty($param['cc'])  ) foreach ( $param['cc']  as $cc  ) $mailer->AddCC($cc);
+			if ( !empty($param['bcc']) ) foreach ( $param['bcc'] as $bcc ) $mailer->AddBCC($bcc);
+			$mailer->IsHTML( isset($param['isHTML']) ? $param['isHTML'] : true );
+			$mailer->Subject = $param['subject'];
+			$mailer->Body = $param['body'];
 			// send message
 			$result = $mailer->Send();
 			if ( !$result ) self::$error = "Error occurred while sending mail ({$mailer->ErrorInfo})";
