@@ -308,14 +308,12 @@ class Util {
 	*/
 	public static function mail($param) {
 		// load library files
-		if ( !class_exists('PHPMailer') ) {
-			foreach ( self::$libPath['mail'] as $path ) {
-				if ( !is_file($path) ) {
-					self::$error = "PHPMailer library is missing ({$path})";
-					return false;
-				}
-				require_once($path);
+		foreach ( self::$libPath['mail'] as $path ) {
+			if ( !is_file($path) ) {
+				self::$error = "PHPMailer library is missing ({$path})";
+				return false;
 			}
+			require_once($path);
 		}
 		// load config (when necessary)
 		$smtpConfig = F::config('smtp');
@@ -343,7 +341,7 @@ class Util {
 		// start...
 		try {
 			// init mail object
-			$mailer = new PHPMailer(true);
+			$mailer = new PHPMailer\PHPMailer\PHPMailer(true);
 			$mailer->CharSet = 'UTF-8';
 			// mail server settings
 			$mailer->IsSMTP();  // enable SMTP
