@@ -155,7 +155,6 @@ class Util {
 	</fusedoc>
 	*/
 	public static function httpRequest($method='GET', $url, $fields=array(), $headers=array(), &$responseHeader=null, &$responseTime=null) {
-		global $fusebox;
 		// RESTful methods
 		$method = strtoupper($method);
 		// validation
@@ -308,7 +307,6 @@ class Util {
 	</fusedoc>
 	*/
 	public static function sendMail($mail) {
-		global $fusebox;
 		// load library files
 		if ( !class_exists('PHPMailer') ) {
 			foreach ( self::$libPath['sendMail'] as $path ) {
