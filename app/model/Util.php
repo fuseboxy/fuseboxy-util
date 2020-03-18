@@ -4,7 +4,7 @@ class Util {
 
 	// properties : library for corresponding methods
 	public static $libPath = array(
-		'sendMail' => array(
+		'mail' => array(
 			__DIR__.'/../../lib/phpmailer/6.1.4/PHPMailer.php',
 			__DIR__.'/../../lib/phpmailer/6.1.4/Exception.php',
 			__DIR__.'/../../lib/phpmailer/6.1.4/SMTP.php',
@@ -271,7 +271,7 @@ class Util {
 			<in>
 				<!-- library -->
 				<structure name="$libPath" scope="self">
-					<array name="sendMail">
+					<array name="mail">
 						<string name="+" />
 					</array>
 				</structure>
@@ -306,10 +306,10 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function sendMail($mail) {
+	public static function mail($mail) {
 		// load library files
 		if ( !class_exists('PHPMailer') ) {
-			foreach ( self::$libPath['sendMail'] as $path ) {
+			foreach ( self::$libPath['mail'] as $path ) {
 				if ( !is_file($path) ) {
 					self::$error = "PHPMailer library is missing ({$path})";
 					return false;
@@ -320,24 +320,24 @@ class Util {
 		// load config (when necessary)
 		$smtpConfig = F::config('smtp');
 		if ( empty($smtpConfig) ) {
-			self::$error = 'Util::sendMail() - SMTP config is required';
+			self::$error = 'Util::mail() - SMTP config is required';
 			return false;
 		}
 		// validation
 		if ( !isset($mail['from']) ) {
-			self::$error = 'Util::sendMail() - Mail sender was not specified';
+			self::$error = 'Util::mail() - Mail sender was not specified';
 			return false;
 		}
 		if ( !isset($mail['to']) ) {
-			self::$error = 'Util::sendMail() - Mail recipient was not specified';
+			self::$error = 'Util::mail() - Mail recipient was not specified';
 			return false;
 		}
 		if ( !isset($mail['subject']) ) {
-			self::$error = 'Util::sendMail() - Mail subject was not specified';
+			self::$error = 'Util::mail() - Mail subject was not specified';
 			return false;
 		}
 		if ( !isset($mail['body']) ) {
-			self::$error = 'Util::sendMail() - Mail body was not specified';
+			self::$error = 'Util::mail() - Mail body was not specified';
 			return false;
 		}
 		// start...
@@ -378,17 +378,18 @@ class Util {
 			$mailer->Body = $mail['body'];
 			// send message
 			$result = $mailer->Send();
-			if ( !$result ) self::$error = "Util::sendMail() - Error sending mail ({$mailer->ErrorInfo})";
+			if ( !$result ) self::$error = "Util::mail() - Error sending mail ({$mailer->ErrorInfo})";
 		// catch any error
 		} catch (Exception $e) {
-			self::$error = "Util::sendMail() - Exception ({$e->getMessage()})";
+			self::$error = "Util::mail() - Exception ({$e->getMessage()})";
 			return false;
 		}
 		// done!
 		return $result;
 	}
-	// alias method
-	public static function sendEmail($mail) { self::sendMail($mail); }
+	// alias methods
+	public static function sendEmail($data) { self::mail($data); }
+	public static function sendMail($data)  { self::mail($data); }
 
 
 
