@@ -62,7 +62,7 @@ class Util {
 		$encryptConfig = F::config('encrypt');
 		// validation
 		if ( empty($encryptConfig['key']) ) {
-			self::$error = 'Util::crypt() - Encrypt key is required';
+			self::$error = 'Encrypt key is missing';
 			return false;
 		}
 		// defult config
@@ -105,12 +105,12 @@ class Util {
 				// ===> http://stackoverflow.com/questions/9781780/why-is-mcrypt-encrypt-putting-binary-characters-at-the-end-of-my-string
 				$data = rtrim($data, "\0");
 			} else {
-				self::$error = "Util::crypt() - Invalid action [{$action}]";
+				self::$error = "Invalid action ({$action})";
 				return false;
 			}
 		// catch any error
 		} catch (Exception $e) {
-			self::$error = "Util::crypt() - {$e->getMessage()}";
+			self::$error = "Crypt error ({$e->getMessage()})";
 			return false;
 		}
 		// done!
@@ -155,11 +155,11 @@ class Util {
 	</fusedoc>
 	*/
 	public static function httpRequest($method='GET', $url, $fields=array(), $headers=array(), &$responseHeader=null, &$responseTime=null) {
-		// RESTful methods
+		// fix param (when necessary)
 		$method = strtoupper($method);
 		// validation
 		if ( !in_array($method, array('GET','POST','PUT','DELETE')) ) {
-			self::$error = "Util::httpRequest() - Invalid method ({$method})";
+			self::$error = "Invalid REST method ({$method})";
 			return false;
 		}
 		// merge params into url (when necessary)
@@ -320,24 +320,24 @@ class Util {
 		// load config (when necessary)
 		$smtpConfig = F::config('smtp');
 		if ( empty($smtpConfig) ) {
-			self::$error = 'Util::mail() - SMTP config is required';
+			self::$error = 'SMTP config is missing';
 			return false;
 		}
 		// validation
 		if ( !isset($mail['from']) ) {
-			self::$error = 'Util::mail() - Mail sender was not specified';
+			self::$error = 'Mail sender was not specified';
 			return false;
 		}
 		if ( !isset($mail['to']) ) {
-			self::$error = 'Util::mail() - Mail recipient was not specified';
+			self::$error = 'Mail recipient was not specified';
 			return false;
 		}
 		if ( !isset($mail['subject']) ) {
-			self::$error = 'Util::mail() - Mail subject was not specified';
+			self::$error = 'Mail subject was not specified';
 			return false;
 		}
 		if ( !isset($mail['body']) ) {
-			self::$error = 'Util::mail() - Mail body was not specified';
+			self::$error = 'Mail body was not specified';
 			return false;
 		}
 		// start...
@@ -378,10 +378,10 @@ class Util {
 			$mailer->Body = $mail['body'];
 			// send message
 			$result = $mailer->Send();
-			if ( !$result ) self::$error = "Util::mail() - Error sending mail ({$mailer->ErrorInfo})";
+			if ( !$result ) self::$error = "Error occurred while sending mail ({$mailer->ErrorInfo})";
 		// catch any error
 		} catch (Exception $e) {
-			self::$error = "Util::mail() - Exception ({$e->getMessage()})";
+			self::$error = "Exception ({$e->getMessage()})";
 			return false;
 		}
 		// done!
@@ -429,7 +429,7 @@ class Util {
 			if ( !$result ) self::$error = libxml_get_last_error();
 		// catch any error
 		} catch (Exception $e) {
-			self::$error = "Util::xslt() - {$e->getMessage()}";
+			self::$error = "XSLT error ({$e->getMessage()})";
 			return false;
 		}
 		// done!
