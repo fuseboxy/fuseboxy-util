@@ -5,10 +5,10 @@ class Util {
 	// properties : library for corresponding methods
 	public static $libPath = array(
 		'mail' => array(
-			__DIR__.'/../../lib/phpmailer/6.1.4/PHPMailer.php',
-			__DIR__.'/../../lib/phpmailer/6.1.4/Exception.php',
-			__DIR__.'/../../lib/phpmailer/6.1.4/SMTP.php',
-			__DIR__.'/../../lib/phpmailer/6.1.4/OAuth.php',
+			__DIR__.'/../../lib/phpmailer/6.1.5/PHPMailer.php',
+			__DIR__.'/../../lib/phpmailer/6.1.5/Exception.php',
+			__DIR__.'/../../lib/phpmailer/6.1.5/SMTP.php',
+			__DIR__.'/../../lib/phpmailer/6.1.5/OAuth.php',
 		),
 		'phpQuery' => array(
 			__DIR__.'/../../lib/phpquery/2.0/phpQuery.php',
