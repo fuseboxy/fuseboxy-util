@@ -270,17 +270,13 @@ class Util {
 		</description>
 		<io>
 			<in>
-				<structure name="$mail">
-					<datetime name="datetime" optional="yes" />
-					<string name="from_name" optional="yes" />
-					<string name="from" optional="yes" default="~smtp user~" />
-					<array name="to" comments="auto tranform comma-or-colon-delimited list to array" />
-					<array name="cc" optional="yes" comments="auto tranform comma-or-colon-delimited list to array" />
-					<array name="bcc" optional="yes" comments="auto tranform comma-or-colon-delimited list to array" />
-					<string name="subject" />
-					<string name="body" />
-					<boolean name="isHTML" optional="yes" default="true" />
+				<!-- library -->
+				<structure name="$libPath" scope="self">
+					<array name="sendMail">
+						<string name="+" />
+					</array>
 				</structure>
+				<!-- config -->
 				<structure name="config" scope="$fusebox">
 					<structure name="smtp" optional="yes">
 						<number name="debug" comments="1 = errors and messages, 2 = messages only" />
@@ -292,6 +288,18 @@ class Util {
 						<string name="password" />
 					</structure>
 				</structure>
+				<!-- parameter -->
+				<structure name="$mail">
+					<datetime name="datetime" optional="yes" />
+					<string name="from_name" optional="yes" />
+					<string name="from" optional="yes" default="~smtp user~" />
+					<array name="to" comments="auto tranform comma-or-colon-delimited list to array" />
+					<array name="cc" optional="yes" comments="auto tranform comma-or-colon-delimited list to array" />
+					<array name="bcc" optional="yes" comments="auto tranform comma-or-colon-delimited list to array" />
+					<string name="subject" />
+					<string name="body" />
+					<boolean name="isHTML" optional="yes" default="true" />
+				</structure>
 			</in>
 			<out>
 				<boolean name="~return~" />
@@ -301,12 +309,16 @@ class Util {
 	*/
 	public static function sendMail($mail) {
 		global $fusebox;
-		// load library
-		if ( !class_exists('PHPMailer') and !file_exists( self::$classPath['phpmailer'] ) ) {
-			self::$error = 'Util::sendMail() - PHPMailer library is required';
-			return false;
+		// load library files
+		if ( !class_exists('PHPMailer') ) {
+			foreach ( self::$libPath['sendMail'] as $path ) {
+				if ( !is_file($path) ) {
+					self::$error = "PHPMailer library is missing ({$path})";
+					return false;
+				}
+				require_once($path);
+			}
 		}
-		require_once( self::$classPath['phpmailer'] );
 		// load config (when necessary)
 		$smtpConfig = F::config('smtp');
 		if ( empty($smtpConfig) ) {
