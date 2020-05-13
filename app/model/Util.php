@@ -405,9 +405,12 @@ class Util {
 						<path name="+" />
 					</array>
 				</structure>
+				<!-- parameter --->
 			</in>
 			<out>
+				<!-- helper comes from the library -->
 				<function name="pq" />
+				<!-- return value -->
 				<object name="~return~" />
 			</out>
 		</io>
