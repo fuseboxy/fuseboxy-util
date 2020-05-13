@@ -272,7 +272,7 @@ class Util {
 				<!-- library -->
 				<structure name="$libPath" scope="self">
 					<array name="mail">
-						<string name="+" />
+						<path name="+" />
 					</array>
 				</structure>
 				<!-- config -->
@@ -388,6 +388,43 @@ class Util {
 	// alias methods
 	public static function sendEmail($data) { self::mail($data); }
 	public static function sendMail($data)  { self::mail($data); }
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			create and return new phpQuery document
+		</description>
+		<io>
+			<in>
+				<!-- library -->
+				<structure name="$libPath" scope="self">
+					<array name="phpQuery">
+						<path name="+" />
+					</array>
+				</structure>
+			</in>
+			<out>
+				<function name="pq" />
+				<object name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function phpQuery($html) {
+		// load library files
+		foreach ( self::$libPath['phpQuery'] as $path ) {
+			if ( !is_file($path) ) {
+				self::$error = "phpQuery library is missing ({$path})";
+				return false;
+			}
+			require_once($path);
+		}
+		// done!
+		return phpQuery::newDocument($html);
+	}
 
 
 
