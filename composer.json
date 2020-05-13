@@ -2,5 +2,6 @@
 	"name": "fuseboxy/fuseboxy-util",
 	"description": "Fuseboxy Util - Tools Come in Handy",
 	"license": "MIT",
-	"require": {}
+    "type": "fuseboxy-module",
+    "require": { "fuseboxy/fuseboxy-installer": "*" }
 }
