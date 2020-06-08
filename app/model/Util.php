@@ -131,6 +131,28 @@ class Util {
 	/**
 	<fusedoc>
 		<description>
+			convert html to markdown (human-readable format)
+		</description>
+		<io>
+			<in>
+				<string name="$html" />
+			</in>
+			<out>
+				<string name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function html2md($html) {
+
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
 			send http-request and get response body
 		</description>
 		<io>
@@ -377,6 +399,28 @@ class Util {
 	/**
 	<fusedoc>
 		<description>
+			convert markdown (human-readable format) to html
+		</description>
+		<io>
+			<in>
+				<string name="$md" />
+			</in>
+			<out>
+				<string name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function md2html($md) {
+
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
 			create and return new phpQuery document
 		</description>
 		<io>
@@ -409,6 +453,32 @@ class Util {
 		}
 		// done!
 		return phpQuery::newDocument($html);
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			convert csv/xls/xlsx to array
+		</description>
+		<io>
+			<in>
+				<string name="$path" />
+				<string name="$worksheet" optional="yes" default="0" />
+				<boolean name="$firstRowAsHeader" optional="yes" default="false" />
+			</in>
+			<out>
+				<array name="~return~">
+					<structure name="+" />
+				</array>
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function xls2array($path, $worksheet=0, $firstRowAsHeader=false) {
+
 	}
 
 
