@@ -245,29 +245,6 @@ class Util {
 	/**
 	<fusedoc>
 		<description>
-			remove space between tags
-		</description>
-		<io>
-			<in>
-				<string name="$html" />
-			</in>
-			<out>
-				<string name="~return~" optional="yes" oncondition="success" />
-				<boolean name="~return~" value="false" optional="yes" oncondition="failure" />
-			</out>
-		</io>
-	</fusedoc>
-	*/
-	public static function minifyHtml($html) {
-		return preg_replace('~>\s+<~m', '><', trim($html));
-	}
-
-
-
-
-	/**
-	<fusedoc>
-		<description>
 			send email
 			===> require PHPMailer library
 			===> https://github.com/PHPMailer/PHPMailer
