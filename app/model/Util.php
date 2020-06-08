@@ -140,7 +140,16 @@ class Util {
 	</fusedoc>
 	*/
 	public static function html2md($html) {
-
+		// load library
+		foreach ( self::$libPath['html2md'] as $path ) {
+			if ( !is_file($path) ) {
+				self::$error = "Markdownify library is missing ({$path})";
+				return false;
+			}
+			require_once($path);
+		}
+		// done!
+		return new Markdownify\Converter()->parseString($html);
 	}
 
 
@@ -307,7 +316,7 @@ class Util {
 	</fusedoc>
 	*/
 	public static function mail($param) {
-		// load library files
+		// load library
 		foreach ( self::$libPath['mail'] as $path ) {
 			if ( !is_file($path) ) {
 				self::$error = "PHPMailer library is missing ({$path})";
