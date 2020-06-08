@@ -16,6 +16,11 @@ class Util {
 		'md2html' => array(
 			__DIR__.'/../../lib/parsedown/1.7.4/Parsedown.php',
 		),
+		'html2md' => array(
+			__DIR__.'/../../lib/markdownify/2.3.1/src/Converter.php',
+			__DIR__.'/../../lib/markdownify/2.3.1/src/ConverterExtra.php',
+			__DIR__.'/../../lib/markdownify/2.3.1/src/Parser.php',
+		),
 		'xls2array' => array(
 			__DIR__.'/../../lib/simplexls/0.9.4/SimpleXLS.php',
 			__DIR__.'/../../lib/simplexlsx/0.8.9/SimpleXLSX.php',
