@@ -5,10 +5,10 @@ class Util {
 	// properties : library for corresponding methods
 	public static $libPath = array(
 		'mail' => array(
-			__DIR__.'/../../lib/phpmailer/6.1.5/PHPMailer.php',
-			__DIR__.'/../../lib/phpmailer/6.1.5/Exception.php',
-			__DIR__.'/../../lib/phpmailer/6.1.5/SMTP.php',
-			__DIR__.'/../../lib/phpmailer/6.1.5/OAuth.php',
+			__DIR__.'/../../lib/phpmailer/6.1.6/src/PHPMailer.php',
+			__DIR__.'/../../lib/phpmailer/6.1.6/src/Exception.php',
+			__DIR__.'/../../lib/phpmailer/6.1.6/src/SMTP.php',
+			__DIR__.'/../../lib/phpmailer/6.1.6/src/OAuth.php',
 		),
 		'phpQuery' => array(
 			__DIR__.'/../../lib/phpquery/2.0/phpQuery.php',
@@ -17,9 +17,9 @@ class Util {
 			__DIR__.'/../../lib/parsedown/1.7.4/Parsedown.php',
 		),
 		'html2md' => array(
+			__DIR__.'/../../lib/markdownify/2.3.1/src/Parser.php',
 			__DIR__.'/../../lib/markdownify/2.3.1/src/Converter.php',
 			__DIR__.'/../../lib/markdownify/2.3.1/src/ConverterExtra.php',
-			__DIR__.'/../../lib/markdownify/2.3.1/src/Parser.php',
 		),
 		'xls2array' => array(
 			__DIR__.'/../../lib/simplexls/0.9.4/SimpleXLS.php',
