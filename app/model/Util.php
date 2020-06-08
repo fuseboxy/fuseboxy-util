@@ -22,8 +22,8 @@ class Util {
 			__DIR__.'/../../lib/markdownify/2.3.1/src/ConverterExtra.php',
 		),
 		'xls2array' => array(
-			__DIR__.'/../../lib/simplexls/0.9.4/SimpleXLS.php',
-			__DIR__.'/../../lib/simplexlsx/0.8.9/SimpleXLSX.php',
+			__DIR__.'/../../lib/simplexls/0.9.5/src/SimpleXLS.php',
+			__DIR__.'/../../lib/simplexlsx/0.8.15/src/SimpleXLSX.php',
 		),
 	);
 
