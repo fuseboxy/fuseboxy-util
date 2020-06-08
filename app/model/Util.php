@@ -10,9 +10,7 @@ class Util {
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/SMTP.php',
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/OAuth.php',
 		),
-		'phpQuery' => array(
-			__DIR__.'/../../lib/phpquery/2.0/phpQuery.php',
-		),
+		'phpQuery' => __DIR__.'/../../lib/phpquery/2.0/phpQuery.php',
 		'md2html' => array(
 			__DIR__.'/../../lib/parsedown/1.7.4/Parsedown.php',
 		),
@@ -427,14 +425,13 @@ class Util {
 			<in>
 				<!-- library -->
 				<structure name="$libPath" scope="self">
-					<array name="phpQuery">
-						<path name="+" />
-					</array>
+					<path name="phpQuery" />
 				</structure>
 				<!-- parameter --->
+				<string name="$html" />
 			</in>
 			<out>
-				<!-- helper comes from the library -->
+				<!-- helper function -->
 				<function name="pq" />
 				<!-- return value -->
 				<object name="~return~" />
@@ -443,14 +440,13 @@ class Util {
 	</fusedoc>
 	*/
 	public static function phpQuery($html) {
-		// load library files
-		foreach ( self::$libPath['phpQuery'] as $path ) {
-			if ( !is_file($path) ) {
-				self::$error = "phpQuery library is missing ({$path})";
-				return false;
-			}
-			require_once($path);
+		// load library
+		$path = self::$libPath['phpQuery'];
+		if ( !is_file($path) ) {
+			self::$error = "phpQuery library is missing ({$path})";
+			return false;
 		}
+		require_once($path);
 		// done!
 		return phpQuery::newDocument($html);
 	}
