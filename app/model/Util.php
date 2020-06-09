@@ -149,7 +149,8 @@ class Util {
 			require_once($path);
 		}
 		// done!
-		return new Markdownify\Converter()->parseString($html);
+		$parser = new Markdownify\Converter;
+		return $parser->parseString($html);
 	}
 
 
@@ -425,7 +426,8 @@ class Util {
 		}
 		require_once($path);
 		// done!
-		return new Parsedown()->text($md);
+		$parser = new Parsedown();
+		return $parser->text($md);
 	}
 
 
