@@ -532,9 +532,13 @@ class Util {
 		}
 		// proceed when has data
 		if ( !empty($data) ) {
-			// get column name from first row
-			$colNames = $data[0];
-			unset($data[0]);
+			// get column name from first row (when necessary)
+			if ( $firstRowAsHeader ) {
+				$colNames = $data[0];
+				unset($data[0]);
+			} else {
+				$colNames = array_keys($data[0]);
+			}
 			// turn column name into snake case
 			foreach ( $colNames as $i => $val ) {
 				$val = strtolower($val);
