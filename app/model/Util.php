@@ -492,6 +492,87 @@ class Util {
 	*/
 	public static function xls2array($path, $worksheet=0, $firstRowAsHeader=false) {
 
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			parse excel data
+			===> use first row as column name (when necessary)
+			===> use snake-case for column name (e.g. this_is_col_name)
+		</description>
+		<io>
+			<in>
+				<path name="$file" comments="excel file path" />
+				<number name="$worksheet" default="0" />
+				<boolean name="$firstRowAsColumnName" default="true" />
+			</in>
+			<out>
+				<array name="~return~">
+					<structure name="+">
+						<string name="~columnName~" />
+					</structure>
+				</array>
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function xls2array($path, $worksheet=0, $firstRowAsHeader=true) {
+		$result = array();
+		// validation
+		$fileExt = strtolower( pathinfo($file, PATHINFO_EXTENSION) );
+		if ( !in_array($fileExt, ['xlsx','xls','csv']) ) {
+			self::$error = "File type <strong><em>{$fileExt}</em></strong> is not supported";
+			return false;
+		}
+		// load data
+		if ( $fileExt == 'csv' ) {
+			$data = file_get_contents($file);
+			$data = mb_convert_encoding($data, 'UTF-8', mb_detect_encoding($data, 'UTF-8, ISO-8859-1', true));
+			$data = array_map('str_getcsv', explode(PHP_EOL, $data));
+		} else {
+			$data = ( $fileExt = 'xlsx' ) ? SimpleXLSX::parse($file) : SimpleXLS::parse($file);
+			if ( $data === false ) {
+				self::$error = ( $fileExt = 'xlsx' ) ? SimpleXLSX::parseError() : SimpleXLS::parseError();
+				return false;
+			}
+		}
+		// extract data from first worksheet (when necessary)
+		if ( method_exists($data, 'rows') ) {
+			$data = $data->rows();
+		}
+		// proceed when has data
+		if ( !empty($data) ) {
+			// get column name from first row
+			$colNames = $data[0];
+			unset($data[0]);
+			// turn column name into snake case
+			foreach ( $colNames as $i => $val ) {
+				$val = strtolower($val);
+				$val = preg_replace( '/[^a-z0-9]/i', ' ', $val);
+				$val = preg_replace('!\s+!', ' ', $val);
+				$val = str_replace(' ', '_', $val);
+				$val = trim($val, '_');
+				$colNames[$i] = $val;
+			}
+			// go through each row and create new record
+			foreach ( $data as $row => $rowData ) {
+				$item = array();
+				foreach ( $colNames as $colIndex => $colName ) {
+					$item[$colName] = isset($rowData[$colIndex]) ? $rowData[$colIndex] : '';
+				}
+				$result[] = $item;
+			}
+		}
+		// clean-up data
+		foreach ( $result as $row => $rowData ) {
+			foreach ( $rowData as $col => $val ) {
+				$result[$row][$col] = trim($val);
+			}
+		}
+		// done!
+		return $result;
 	}
 
 
