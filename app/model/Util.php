@@ -475,30 +475,6 @@ class Util {
 	<fusedoc>
 		<description>
 			convert csv/xls/xlsx to array
-		</description>
-		<io>
-			<in>
-				<string name="$path" />
-				<string name="$worksheet" optional="yes" default="0" />
-				<boolean name="$firstRowAsHeader" optional="yes" default="false" />
-			</in>
-			<out>
-				<array name="~return~">
-					<structure name="+" />
-				</array>
-			</out>
-		</io>
-	</fusedoc>
-	*/
-	public static function xls2array($path, $worksheet=0, $firstRowAsHeader=false) {
-
-
-
-
-	/**
-	<fusedoc>
-		<description>
-			parse excel data
 			===> use first row as column name (when necessary)
 			===> use snake-case for column name (e.g. this_is_col_name)
 		</description>
@@ -518,29 +494,41 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function xls2array($path, $worksheet=0, $firstRowAsHeader=true) {
+	public static function xls2array($file, $worksheet=0, $firstRowAsHeader=true) {
 		$result = array();
+		// load library
+		foreach ( self::$libPath['xls2array'] as $path ) {
+			if ( !is_file($path) ) {
+				self::$error = "SimpleXLSX library is missing ({$path})";
+				return false;
+			}
+			require_once($path);
+		}
 		// validation
-		$fileExt = strtolower( pathinfo($file, PATHINFO_EXTENSION) );
-		if ( !in_array($fileExt, ['xlsx','xls','csv']) ) {
+		$fileExt = strtoupper( pathinfo($file, PATHINFO_EXTENSION) );
+		if ( !is_file($file) ) {
+			self::$error = "File not found ({$file})";
+			return false;
+		} elseif ( !in_array($fileExt, ['XLSX','XLS','CSV']) ) {
 			self::$error = "File type <strong><em>{$fileExt}</em></strong> is not supported";
 			return false;
 		}
-		// load data
-		if ( $fileExt == 'csv' ) {
+		// parse csv by php
+		if ( $fileExt == 'CSV' ) {
 			$data = file_get_contents($file);
 			$data = mb_convert_encoding($data, 'UTF-8', mb_detect_encoding($data, 'UTF-8, ISO-8859-1', true));
 			$data = array_map('str_getcsv', explode(PHP_EOL, $data));
+		// parse excel by library
 		} else {
-			$data = ( $fileExt = 'xlsx' ) ? SimpleXLSX::parse($file) : SimpleXLS::parse($file);
+			$data = call_user_func('Simple'.$fileExt.'::parse', $file);
 			if ( $data === false ) {
-				self::$error = ( $fileExt = 'xlsx' ) ? SimpleXLSX::parseError() : SimpleXLS::parseError();
+				self::$error = call_user_func('Simple'.$fileExt.'::parseError');
 				return false;
 			}
 		}
-		// extract data from first worksheet (when necessary)
+		// extract data from specific worksheet (when necessary)
 		if ( method_exists($data, 'rows') ) {
-			$data = $data->rows();
+			$data = $data->rows($worksheet);
 		}
 		// proceed when has data
 		if ( !empty($data) ) {
