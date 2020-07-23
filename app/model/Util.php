@@ -4,19 +4,23 @@ class Util {
 
 	// properties : library for corresponding methods
 	public static $libPath = array(
+		'array2xls' => array(
+			'PhpOffice\PhpSpreadsheet\Spreadsheet',
+			'PhpOffice\PhpSpreadsheet\Writer\Xlsx',
+		),
+		'html2md' => array(
+			__DIR__.'/../../lib/markdownify/2.3.1/src/Parser.php',
+			__DIR__.'/../../lib/markdownify/2.3.1/src/Converter.php',
+			__DIR__.'/../../lib/markdownify/2.3.1/src/ConverterExtra.php',
+		),
 		'mail' => array(
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/PHPMailer.php',
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/Exception.php',
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/SMTP.php',
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/OAuth.php',
 		),
-		'phpQuery' => __DIR__.'/../../lib/phpquery/2.0/phpQuery.php',
 		'md2html' => __DIR__.'/../../lib/parsedown/1.7.4/Parsedown.php',
-		'html2md' => array(
-			__DIR__.'/../../lib/markdownify/2.3.1/src/Parser.php',
-			__DIR__.'/../../lib/markdownify/2.3.1/src/Converter.php',
-			__DIR__.'/../../lib/markdownify/2.3.1/src/ConverterExtra.php',
-		),
+		'phpQuery' => __DIR__.'/../../lib/phpquery/2.0/phpQuery.php',
 		'xls2array' => array(
 			__DIR__.'/../../lib/simplexls/0.9.5/src/SimpleXLS.php',
 			__DIR__.'/../../lib/simplexlsx/0.8.15/src/SimpleXLSX.php',
@@ -29,6 +33,155 @@ class Util {
 	// get (latest) error message
 	private static $error;
 	public static function error() { return self::$error; }
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			export data into excel file (in xlsx format)
+		</description>
+		<io>
+			<in>
+				<!-- config -->
+				<structure name="config" scope="$fusebox">
+					<string name="uploadDir" />
+					<string name="uploadUrl" />
+				</structure>
+				<!-- parameters -->
+				<string name="$filePath" comments="relative path to upload directory" />
+				<structure name="$fileData">
+					<array name="~worksheetName~">
+						<structure name="+" comments="row">
+							<string name="~columnName~" />
+						</structure>
+					</array>
+				</structure>
+				<structure name="$options" optional="yes">
+					<string name="password" />
+					<boolean name="firstRowAsHeader" />
+					<boolean name="showRecordCount" />
+					<structure name="columnWidth">
+						<array name="~worksheetName~">
+							<number name="+" />
+						</array>
+					</structure
+					<structure name="columnFormat">
+						<array name="~worksheetName~">
+							<number name="+" />
+						</array>
+					</structure>
+				</structure>
+			</in>
+			<out>
+				<!-- file output -->
+				<file name="~uploadDir~/~filePath~" />
+				<!-- return value -->
+				<structure name="~return~">
+					<string name="path" />
+					<string name="url" />
+				</structure>
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function array2xls($filePath, $fileData, $options=[]) {
+		// mark start time
+		$startTime = microtime(true);
+		// validate config
+		if ( empty( F::config('uploadDir') ) ) {
+			self::$error = 'Config [uploadDir] is required';
+			return false;
+		} elseif ( empty( F::config('uploadUrl') ) ) {
+			self::$error = 'Config [uploadUrl] is required';
+			return false;
+		}
+		// useful variables
+		$fileDir  = pathinfo($filePath, PATHINFO_DIRNAME);
+		$filename = pathinfo($filePath, PATHINFO_BASENAME);
+		$baseDir  = F::config('uploadDir').$fileDir.'/';
+		$baseUrl  = F::config('uploadUrl').$fileDir.'/';
+		// create directory (when necessary)
+		if ( !is_dir($baseDir) and !mkdir($baseDir, 0777) ) {
+			$err = error_get_last();
+			self::$error = $err['message'];
+			return false;
+		}
+		// create blank spreadsheet
+		$spreadsheet = new PhpOffice\PhpSpreadsheet\Spreadsheet();
+		// go through each worksheet
+		$wsIndex = 0;
+		foreach ( $fileData as $wsName => $ws ) {
+			// show number of records at worksheet name (when necessary)
+			if ( !empty($options['showRecordCount']) and !empty($ws) ) {
+				$wsName .= ' ('.count($ws).')';
+			}
+			// create worksheet
+			if ( $wsIndex > 0 ) $spreadsheet->createSheet();
+			$spreadsheet->setActiveSheetIndex($wsIndex);
+			$sheet = $spreadsheet->getActiveSheet();
+			$sheet->setTitle($wsName);
+			// all column names (from A to ZZ)
+			$alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+			$colNames = str_split($alphabet);
+			for ( $i=0; $i<strlen($alphabet); $i++ ) {
+				for ( $j=0; $j<strlen($alphabet); $j++ ) {
+					$colNames[] = $alphabet[$i].$alphabet[$j];
+				}
+			}
+			// column format
+			$sheet->getStyle('A:ZZ')->getFont()->setSize(10);
+			$sheet->getStyle('A:ZZ')->getAlignment()->setWrapText(true);
+			$sheet->getStyle('A:ZZ')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
+			$sheet->getStyle('A:ZZ')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+			// header format
+			$sheet->getStyle('1:1')->getFont()->setBold(true);
+			$sheet->getStyle('1:1')->getAlignment()->setWrapText(true);
+			$sheet->getStyle('1:1')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
+			$sheet->getStyle('1:1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFDDDDDD');
+			// output header
+			if ( !empty($ws) ) {
+				$row = $ws[0];
+				$colIndex = 0;
+				foreach ( $row as $key => $val ) {
+					$sheet->setCellValue($colNames[$colIndex].'1', $key);
+					$colIndex++;
+				}
+			}
+			// output each row of data
+			foreach ( $ws as $rowIndex => $row ) {
+				$rowNumber = $rowIndex + 2;
+				// go through each column
+				$colIndex = 0;
+				foreach ( $row as $key => $val ) {
+					$sheet->setCellValue($colNames[$colIndex].$rowNumber, $val);
+					$colIndex++;
+				} // foreach-col
+			} // foreach-row
+			$wsIndex++;
+			// focus first cell (when finished)
+			$sheet->getStyle('A1');
+		} // foreach-worksheet
+		// mark end time
+		$endTime = microtime(true);
+		$et = round(($endTime-$startTime)*1000);
+		// show execution time at last worksheet
+		$spreadsheet->createSheet();
+		$spreadsheet->setActiveSheetIndex( count($fileData) );
+		$sheet = $spreadsheet->getActiveSheet();
+		$sheet->setTitle('et ('.$et.'ms)');
+		// focus first worksheet (when finished)
+		$spreadsheet->setActiveSheetIndex(0);
+		// write to report
+		$writer = new PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+		$writer->save($baseDir.$filename);
+		// done!
+		return array(
+			'path' => $baseDir.$filename,
+			'url'  => $baseUrl.$filename,
+		);
+	}
 
 
 
@@ -482,7 +635,7 @@ class Util {
 			<in>
 				<path name="$file" comments="excel file path" />
 				<number name="$worksheet" default="0" />
-				<boolean name="$firstRowAsColumnName" default="true" />
+				<boolean name="$firstRowAsHeader" default="true" />
 			</in>
 			<out>
 				<array name="~return~">
