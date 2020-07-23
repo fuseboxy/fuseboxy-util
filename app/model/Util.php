@@ -112,16 +112,16 @@ class Util {
 		$spreadsheet = new PhpOffice\PhpSpreadsheet\Spreadsheet();
 		// go through each worksheet
 		$wsIndex = 0;
-		foreach ( $fileData as $wsName => $ws ) {
+		foreach ( $fileData as $worksheetName => $worksheet ) {
 			// show number of records at worksheet name (when necessary)
-			if ( !empty($options['showRecordCount']) and !empty($ws) ) {
-				$wsName .= ' ('.count($ws).')';
+			if ( !empty($options['showRecordCount']) and !empty($worksheet) ) {
+				$worksheetName .= ' ('.count($worksheet).')';
 			}
 			// create worksheet
 			if ( $wsIndex > 0 ) $spreadsheet->createSheet();
 			$spreadsheet->setActiveSheetIndex($wsIndex);
-			$sheet = $spreadsheet->getActiveSheet();
-			$sheet->setTitle($wsName);
+			$activeSheet = $spreadsheet->getActiveSheet();
+			$activeSheet->setTitle($worksheetName);
 			// all column names (from A to ZZ)
 			$alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 			$colNames = str_split($alphabet);
@@ -131,37 +131,37 @@ class Util {
 				}
 			}
 			// column format
-			$sheet->getStyle('A:ZZ')->getFont()->setSize(10);
-			$sheet->getStyle('A:ZZ')->getAlignment()->setWrapText(true);
-			$sheet->getStyle('A:ZZ')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
-			$sheet->getStyle('A:ZZ')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+			$activeSheet->getStyle('A:ZZ')->getFont()->setSize(10);
+			$activeSheet->getStyle('A:ZZ')->getAlignment()->setWrapText(true);
+			$activeSheet->getStyle('A:ZZ')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
+			$activeSheet->getStyle('A:ZZ')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
 			// header format
-			$sheet->getStyle('1:1')->getFont()->setBold(true);
-			$sheet->getStyle('1:1')->getAlignment()->setWrapText(true);
-			$sheet->getStyle('1:1')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
-			$sheet->getStyle('1:1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFDDDDDD');
+			$activeSheet->getStyle('1:1')->getFont()->setBold(true);
+			$activeSheet->getStyle('1:1')->getAlignment()->setWrapText(true);
+			$activeSheet->getStyle('1:1')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
+			$activeSheet->getStyle('1:1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFDDDDDD');
 			// output header
-			if ( !empty($ws) ) {
-				$row = $ws[0];
+			if ( !empty($worksheet) ) {
+				$row = $worksheet[0];
 				$colIndex = 0;
 				foreach ( $row as $key => $val ) {
-					$sheet->setCellValue($colNames[$colIndex].'1', $key);
+					$activeSheet->setCellValue($colNames[$colIndex].'1', $key);
 					$colIndex++;
 				}
 			}
 			// output each row of data
-			foreach ( $ws as $rowIndex => $row ) {
+			foreach ( $worksheet as $rowIndex => $row ) {
 				$rowNumber = $rowIndex + 2;
 				// go through each column
 				$colIndex = 0;
 				foreach ( $row as $key => $val ) {
-					$sheet->setCellValue($colNames[$colIndex].$rowNumber, $val);
+					$activeSheet->setCellValue($colNames[$colIndex].$rowNumber, $val);
 					$colIndex++;
 				} // foreach-col
 			} // foreach-row
 			$wsIndex++;
 			// focus first cell (when finished)
-			$sheet->getStyle('A1');
+			$activeSheet->getStyle('A1');
 		} // foreach-worksheet
 		// mark end time
 		$endTime = microtime(true);
@@ -169,8 +169,8 @@ class Util {
 		// show execution time at last worksheet
 		$spreadsheet->createSheet();
 		$spreadsheet->setActiveSheetIndex( count($fileData) );
-		$sheet = $spreadsheet->getActiveSheet();
-		$sheet->setTitle('et ('.$et.'ms)');
+		$activeSheet = $spreadsheet->getActiveSheet();
+		$activeSheet->setTitle('et ('.$et.'ms)');
 		// focus first worksheet (when finished)
 		$spreadsheet->setActiveSheetIndex(0);
 		// write to report
