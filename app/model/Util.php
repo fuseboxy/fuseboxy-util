@@ -692,6 +692,7 @@ class Util {
 			} else {
 				$colNames = array_keys($data[0]);
 			}
+			$colNames = array_map('strtolower', $colNames);
 			// turn column name into snake case
 			foreach ( $colNames as $i => $val ) {
 				$val = strtolower($val);
