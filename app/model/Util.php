@@ -58,15 +58,9 @@ class Util {
 						</structure>
 					</array>
 				</structure>
-				<structure name="$options" optional="yes">
-					<boolean name="firstRowAsHeader" />
-					<boolean name="showRecordCount" />
-					<structure name="columnWidth">
-						<array name="~worksheetName~">
-							<number name="+" />
-						</array>
-					</structure
-					<structure name="columnFormat">
+				<structure name="$options">
+					<boolean name="showRecordCount" optional="yes" />
+					<structure name="columnWidth" optional="yes">
 						<array name="~worksheetName~">
 							<number name="+" />
 						</array>
@@ -139,6 +133,12 @@ class Util {
 			$activeSheet->getStyle('1:1')->getAlignment()->setWrapText(true);
 			$activeSheet->getStyle('1:1')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
 			$activeSheet->getStyle('1:1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFDDDDDD');
+			// column width (when necessary)
+			if ( !empty($options['columnWidth'][$worksheetName]) ) {
+				foreach ( $options['columnWidth'][$worksheetName] as $key => $val ) {
+					$activeSheet->getColumnDimension($colNames[$key])->setWidth($val);
+				}
+			}
 			// output header
 			if ( !empty($worksheet) ) {
 				$row = $worksheet[0];
