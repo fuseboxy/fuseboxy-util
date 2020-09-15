@@ -59,7 +59,6 @@ class Util {
 					</array>
 				</structure>
 				<structure name="$options" optional="yes">
-					<string name="password" />
 					<boolean name="firstRowAsHeader" />
 					<boolean name="showRecordCount" />
 					<structure name="columnWidth">
