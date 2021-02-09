@@ -20,7 +20,7 @@ class Util {
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/OAuth.php',
 		),
 		'md2html' => __DIR__.'/../../lib/parsedown/1.7.4/Parsedown.php',
-		'phpQuery' => __DIR__.'/../../lib/phpquery/2.0/phpQuery.php',
+		'phpQuery' => __DIR__.'/../../lib/phpquery/2.0.1/phpQuery.php',
 		'xls2array' => array(
 			__DIR__.'/../../lib/simplexls/0.9.5/src/SimpleXLS.php',
 			__DIR__.'/../../lib/simplexlsx/0.8.15/src/SimpleXLSX.php',
