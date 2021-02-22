@@ -633,8 +633,12 @@ class Util {
 		<io>
 			<in>
 				<path name="$file" comments="excel file path" />
-				<number name="$worksheet" default="0" />
-				<boolean name="$firstRowAsHeader" default="true" />
+				<structure name="$options">
+					<number name="worksheet" default="0" comments="starts from zero" />
+					<number name="startRow" default="1" comments="starts from one" />
+					<boolean name="firstRowAsHeader" default="true" />
+					<boolean name="convertHeaderCase" default="true" />
+				</structure>
 			</in>
 			<out>
 				<array name="~return~">
@@ -646,7 +650,7 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function xls2array($file, $worksheet=0, $firstRowAsHeader=true) {
+	public static function xls2array($file, $options=[]) {
 		$result = array();
 		// load library
 		foreach ( self::$libPath['xls2array'] as $path ) {
@@ -656,6 +660,13 @@ class Util {
 			}
 			require_once($path);
 		}
+		// default options
+		$options = array(
+			'startRow' => isset($options['startRow']) ? $options['startRow'] : 1,
+			'worksheet' => isset($options['worksheet']) ? $options['worksheet'] : 0,
+			'firstRowAsHeader' => isset($options['firstRowAsHeader']) ? $options['firstRowAsHeader'] : true,
+			'convertHeaderCase' => isset($options['convertHeaderCase']) ? $options['convertHeaderCase'] : true,
+		);
 		// validation
 		$fileExt = strtoupper( pathinfo($file, PATHINFO_EXTENSION) );
 		if ( !is_file($file) ) {
@@ -679,20 +690,20 @@ class Util {
 			}
 		}
 		// extract data from specific worksheet (when necessary)
-		if ( method_exists($data, 'rows') ) {
-			$data = $data->rows($worksheet);
-		}
-		// proceed when has data
-		if ( !empty($data) ) {
-			// get column name from first row (when necessary)
-			if ( $firstRowAsHeader ) {
-				$colNames = $data[0];
-				unset($data[0]);
-			} else {
-				$colNames = array_keys($data[0]);
-			}
+		if ( method_exists($data, 'rows') ) $data = $data->rows($options['worksheet']);
+		for ( $i=0; $i<($options['startRow']-1); $i++ ) if ( isset($data[$i]) ) unset($data[$i]);
+		$data = array_values($data);
+		// validation
+		// ===> simply return when no data
+		// ===> simply return when no need to apply first row as header
+		if ( empty($data) or !$options['firstRowAsHeader'] ) return $data;
+		// get column name from first row
+		$colNames = $data[0];
+		unset($data[0]);
+		$data = array_values($data);
+		// convert column name into snake case
+		if ( $options['convertHeaderCase'] ) {
 			$colNames = array_map('strtolower', $colNames);
-			// turn column name into snake case
 			foreach ( $colNames as $i => $val ) {
 				$val = strtolower($val);
 				$val = preg_replace( '/[^a-z0-9]/i', ' ', $val);
@@ -701,14 +712,14 @@ class Util {
 				$val = trim($val, '_');
 				$colNames[$i] = $val;
 			}
-			// go through each row and create new record
-			foreach ( $data as $row => $rowData ) {
-				$item = array();
-				foreach ( $colNames as $colIndex => $colName ) {
-					$item[$colName] = isset($rowData[$colIndex]) ? $rowData[$colIndex] : '';
-				}
-				$result[] = $item;
+		}
+		// go through each row and create new record
+		foreach ( $data as $row => $rowData ) {
+			$item = array();
+			foreach ( $colNames as $colIndex => $colName ) {
+				$item[$colName] = isset($rowData[$colIndex]) ? $rowData[$colIndex] : '';
 			}
+			$result[] = $item;
 		}
 		// clean-up data
 		foreach ( $result as $row => $rowData ) {
