@@ -626,6 +626,126 @@ class Util {
 	/**
 	<fusedoc>
 		<description>
+			generate (psuedo-random) UUID
+			===> http://php.net/manual/en/function.uniqid.php#94959
+		</description>
+		<io>
+			<in>
+				<string name="$version" default="v4" />
+				<string name="$namespace" optional="yes" />
+				<string name="$name" optional="yes" />
+			</in>
+			<out>
+				<string name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function uuid($version='v4', $namespace=null, $name=null) {
+		$version = strtolower($version);
+		// validation
+		if ( !in_array($version, ['v3','v4','v5']) ) {
+			self::$error = "Invalid UUID version ({$version})";
+			return false;
+		} elseif ( in_array($version['v3','v5']) and ( empty($namespace) or empty($name) ) ) {
+			self::$error = 'Arguments [namespace] and [name] are both required';
+			return false;
+		}
+		// determine method to call
+		$method = 'self::uuid__'.$version;
+		// done!
+		return ( $version == 'v4' ) ? call_user_func($method) : call_user_func($method, $namespace, $name);
+	}
+	// UUID v3
+	public static function uuid__v3($namespace, $name) {
+		if ( self::uuid__isValidNamespace($namespace) === false ) return false;
+		// Get hexadecimal components of namespace
+		$nhex = str_replace(array('-','{','}'), '', $namespace);
+		// Binary Value
+		$nstr = '';
+		// Convert Namespace UUID to bits
+		for($i = 0; $i < strlen($nhex); $i+=2) $nstr .= chr(hexdec($nhex[$i].$nhex[$i+1]));
+		// Calculate hash value
+		$hash = md5($nstr . $name);
+		// done!
+		return sprintf('%08s-%04s-%04x-%04x-%12s',
+			// 32 bits for "time_low"
+			substr($hash, 0, 8),
+			// 16 bits for "time_mid"
+			substr($hash, 8, 4),
+			// 16 bits for "time_hi_and_version",
+			// four most significant bits holds version number 3
+			(hexdec(substr($hash, 12, 4)) & 0x0fff) | 0x3000,
+			// 16 bits, 8 bits for "clk_seq_hi_res",
+			// 8 bits for "clk_seq_low",
+			// two most significant bits holds zero and one for variant DCE1.1
+			(hexdec(substr($hash, 16, 4)) & 0x3fff) | 0x8000,
+			// 48 bits for "node"
+			substr($hash, 20, 12)
+		);
+	}
+	// UUID v4
+	public static function uuid__v4() {
+		return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+			// 32 bits for "time_low"
+			mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+			// 16 bits for "time_mid"
+			mt_rand(0, 0xffff),
+			// 16 bits for "time_hi_and_version",
+			// four most significant bits holds version number 4
+			mt_rand(0, 0x0fff) | 0x4000,
+			// 16 bits, 8 bits for "clk_seq_hi_res",
+			// 8 bits for "clk_seq_low",
+			// two most significant bits holds zero and one for variant DCE1.1
+			mt_rand(0, 0x3fff) | 0x8000,
+			// 48 bits for "node"
+			mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff)
+		);
+	}
+	// UUID v5
+	public static function uuid__v5($namespace, $name) {
+		if ( self::uuid__isValidNamespace($namespace) === false ) return false;
+		// Get hexadecimal components of namespace
+		$nhex = str_replace(array('-','{','}'), '', $namespace);
+		// Binary Value
+		$nstr = '';
+		// Convert Namespace UUID to bits
+		for($i = 0; $i < strlen($nhex); $i+=2) $nstr .= chr(hexdec($nhex[$i].$nhex[$i+1]));
+		// Calculate hash value
+		$hash = sha1($nstr . $name);
+		// done!
+		return sprintf('%08s-%04s-%04x-%04x-%12s',
+			// 32 bits for "time_low"
+			substr($hash, 0, 8),
+			// 16 bits for "time_mid"
+			substr($hash, 8, 4),
+			// 16 bits for "time_hi_and_version",
+			// four most significant bits holds version number 5
+			(hexdec(substr($hash, 12, 4)) & 0x0fff) | 0x5000,
+			// 16 bits, 8 bits for "clk_seq_hi_res",
+			// 8 bits for "clk_seq_low",
+			// two most significant bits holds zero and one for variant DCE1.1
+			(hexdec(substr($hash, 16, 4)) & 0x3fff) | 0x8000,
+			// 48 bits for "node"
+			substr($hash, 20, 12)
+		);
+	}
+	// UUID namspace validation
+	public static function uuid__isValidNamespace($namespace) {
+		$valid = ( preg_match('/^\{?[0-9a-f]{8}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{12}\}?$/i', $uuid) === 1 );
+		if ( !$valid ) {
+			self::$error = "Invalid UUID namespace ({$namespace})";
+			return false;
+		}
+		return true;
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
 			convert csv/xls/xlsx to array
 			===> use first row as column name (when necessary)
 			===> use snake-case for column name (e.g. this_is_col_name)
