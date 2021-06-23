@@ -647,7 +647,7 @@ class Util {
 		if ( !in_array($version, ['v3','v4','v5']) ) {
 			self::$error = "Invalid UUID version ({$version})";
 			return false;
-		} elseif ( in_array($version['v3','v5']) and ( empty($namespace) or empty($name) ) ) {
+		} elseif ( in_array($version, ['v3','v5']) and ( empty($namespace) or empty($name) ) ) {
 			self::$error = 'Arguments [namespace] and [name] are both required';
 			return false;
 		}
