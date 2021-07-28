@@ -343,7 +343,7 @@ class Util {
 		// fix param (when necessary)
 		$method = strtoupper($method);
 		// merge params into url (when necessary)
-		if ( $method != 'POST' ) {
+		if ( $method == 'GET' ) {
 			$qs = !empty($fields) ? http_build_query($fields) : '';
 			if ( !empty($qs) ) $url .= ( strpos($url, '?') === false ) ? '?' : '&';
 			$url .= $qs;
