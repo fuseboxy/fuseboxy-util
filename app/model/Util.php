@@ -320,7 +320,7 @@ class Util {
 					<string name="httpsProxy" optional="yes" />
 				</structure>
 				<string name="$url" />
-				<string name="$method" default="GET" comments="GET|POST|PUT|DELETE" />
+				<string name="$method" default="GET" example="GET|POST|PUT|DELETE|.." />
 				<structure name="$fields">
 					<string name="~fieldName~" comments="no url-encoded" />
 				</structure>
@@ -342,11 +342,6 @@ class Util {
 	public static function httpRequest($method='GET', $url, $fields=array(), $headers=array(), &$responseHeader=null, &$responseTime=null) {
 		// fix param (when necessary)
 		$method = strtoupper($method);
-		// validation
-		if ( !in_array($method, array('GET','POST','PUT','DELETE')) ) {
-			self::$error = "Invalid REST method ({$method})";
-			return false;
-		}
 		// merge params into url (when necessary)
 		if ( $method != 'POST' ) {
 			$qs = !empty($fields) ? http_build_query($fields) : '';
