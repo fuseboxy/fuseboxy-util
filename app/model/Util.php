@@ -339,7 +339,7 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function httpRequest($method='GET', $url, $fields=array(), $headers=array(), &$responseHeader=null, &$responseTime=null) {
+	public static function httpRequest($method='GET', $url, $fields=[], $headers=[], &$responseHeader=null, &$responseTime=null) {
 		// fix param (when necessary)
 		$method = strtoupper($method);
 		// merge params into url (when necessary)
@@ -347,27 +347,31 @@ class Util {
 			$qs = !empty($fields) ? http_build_query($fields) : '';
 			if ( !empty($qs) ) $url .= ( strpos($url, '?') === false ) ? '?' : '&';
 			$url .= $qs;
+			$fields = [];
 		}
 		// transform headers
-		$arr = $headers;
-		$headers = array();
-		foreach ( $arr as $key => $val ) $headers[] = "{$key} : {$val}";
+		$headers = array_map(function($key, $val){
+			return "{$key} : {$val}";
+		}, array_keys($headers), $headers);
 		// apply cookie file (to avoid redirect loop when target server check cookies)
 		$cookie_file = sys_get_temp_dir().'/cookies/'.md5($_SERVER['REMOTE_ADDR']).'.txt';
 		// load page remotely
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
+		// set options according to method
 		if ( $method == 'GET' ) {
 			curl_setopt($ch, CURLOPT_HTTPGET, true);
 		} elseif ( $method == 'POST' ) {
 			curl_setopt($ch, CURLOPT_POSTREDIR, 3);
 			curl_setopt($ch, CURLOPT_POST, true);
-			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
-		} elseif ( $method == 'PUT' ) {
-			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-		} elseif ( $method == 'DELETE' ) {
-			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+		} else {
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
 		}
+		// put form data into options (when necessary)
+		if ( $method == 'POST' or !empty($fields) ) {
+			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
+		}
+		// set other options
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		curl_setopt($ch, CURLOPT_COOKIEFILE, $cookie_file);
 		curl_setopt($ch, CURLOPT_COOKIEJAR, $cookie_file);
@@ -411,8 +415,8 @@ class Util {
 		return $pageBody;
 	}
 	// alias methods
-	public static function getPage ($url,                  &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET',  $url, array(), array(), $responseHeader, $responseTime); }
-	public static function postPage($url, $fields=array(), &$responseHeader=null, &$responseTime=null) { return self::httpRequest('POST', $url, $fields, array(), $responseHeader, $responseTime); }
+	public static function getPage ($url,             &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET',  $url, [],      [], $responseHeader, $responseTime); }
+	public static function postPage($url, $fields=[], &$responseHeader=null, &$responseTime=null) { return self::httpRequest('POST', $url, $fields, [], $responseHeader, $responseTime); }
 
 
 
