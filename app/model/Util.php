@@ -213,6 +213,8 @@ class Util {
 	*/
 	private static function crypt($action, $data) {
 		$encryptConfig = F::config('encrypt');
+		// consider as encrypt key if config is just string
+		if ( is_string($encryptConfig) ) $encryptConfig = array('key' => $encryptConfig);
 		// validation
 		if ( empty($encryptConfig['key']) ) {
 			self::$error = 'Encrypt key is missing';
