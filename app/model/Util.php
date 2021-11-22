@@ -598,7 +598,7 @@ class Util {
 					<path name="phpQuery" />
 				</structure>
 				<!-- parameter --->
-				<string_or_path name="$html" />
+				<string name="$html" />
 			</in>
 			<out>
 				<!-- helper function -->
@@ -617,12 +617,6 @@ class Util {
 			return false;
 		}
 		require_once($path);
-		// capture output when path (instead of content) specified
-		if ( is_file($html) ) {
-			ob_start();
-			include $html;
-			$html = ob_get_clean();
-		}
 		// done!
 		return phpQuery::newDocument($html);
 	}
