@@ -195,8 +195,8 @@ class Util {
 				<structure name="config" scope="$fusebox">
 					<structure name="encrypt">
 						<string name="key" />
-						<string name="library" optional="yes" default="mcrypt|openssl" />
-						<string name="cipher" optional="yes" default="~MCRYPT_RIJNDAEL_256~|AES-256-CBC" />
+						<string name="vendor" optional="yes" default="mcrypt|openssl" />
+						<string name="algo" optional="yes" default="~MCRYPT_RIJNDAEL_256~|AES-256-CBC" />
 						<string name="mode" optional="yes" default="~MCRYPT_MODE_ECB~|0" comments="used as options for openssl" />
 						<string name="iv" optional="yes" default="" commens="initial vector" />
 					</structure>
@@ -221,10 +221,10 @@ class Util {
 			return false;
 		}
 		// defult config
-		if ( empty($encryptConfig['library']) ) $encryptConfig['library'] = ( PHP_MAJOR_VERSION < 7 ) ? 'mcrypt' : 'openssl';
-		if ( empty($encryptConfig['cipher'] ) ) $encryptConfig['cipher']  = ( $encryptConfig['library'] == 'mcrypt' ) ? MCRYPT_RIJNDAEL_256 : 'BF-ECB';
-		if ( empty($encryptConfig['mode']   ) ) $encryptConfig['mode']    = ( $encryptConfig['library'] == 'mcrypt' ) ? MCRYPT_MODE_ECB : 0;
-		if ( empty($encryptConfig['iv']     ) ) $encryptConfig['iv']      = ( $encryptConfig['library'] == 'mcrypt' ) ? null : '';
+		if ( empty($encryptConfig['vendor']) ) $encryptConfig['vendor'] = ( PHP_MAJOR_VERSION < 7 ) ? 'mcrypt' : 'openssl';
+		if ( empty($encryptConfig['algo'])   ) $encryptConfig['algo']   = ( $encryptConfig['vendor'] == 'mcrypt' ) ? MCRYPT_RIJNDAEL_256 : 'BF-ECB';
+		if ( empty($encryptConfig['mode'])   ) $encryptConfig['mode']   = ( $encryptConfig['vendor'] == 'mcrypt' ) ? MCRYPT_MODE_ECB : 0;
+		if ( empty($encryptConfig['iv'])     ) $encryptConfig['iv']     = ( $encryptConfig['vendor'] == 'mcrypt' ) ? null : '';
 		// start
 		try {
 			// url-friendly special character for base64 string replacement
@@ -234,10 +234,10 @@ class Util {
 			$url_safe = array('_','-','.');
 			// validation & start
 			if ( $action == 'encrypt' ) {
-				if ( $encryptConfig['library'] == 'mcrypt' ) {
-					$data = mcrypt_encrypt($encryptConfig['cipher'], $encryptConfig['key'], $data, $encryptConfig['mode'], $encryptConfig['iv']);
+				if ( $encryptConfig['vendor'] == 'mcrypt' ) {
+					$data = mcrypt_encrypt($encryptConfig['algo'], $encryptConfig['key'], $data, $encryptConfig['mode'], $encryptConfig['iv']);
 				} else {
-					$data = openssl_encrypt($data, $encryptConfig['cipher'], $encryptConfig['key'], $encryptConfig['mode'], $encryptConfig['iv']);
+					$data = openssl_encrypt($data, $encryptConfig['algo'], $encryptConfig['key'], $encryptConfig['mode'], $encryptConfig['iv']);
 				}
 				// base64-encode the encrypted data
 				$data = base64_encode($data);
@@ -250,10 +250,10 @@ class Util {
 					$data = str_replace($url_safe[$i], $url_unsafe[$i], $data);
 				}
 				$data = base64_decode($data);
-				if ( $encryptConfig['library'] == 'mcrypt' ) {
-					$data = mcrypt_decrypt($encryptConfig['cipher'], $encryptConfig['key'], $data, $encryptConfig['mode'], $encryptConfig['iv']);
+				if ( $encryptConfig['vendor'] == 'mcrypt' ) {
+					$data = mcrypt_decrypt($encryptConfig['algo'], $encryptConfig['key'], $data, $encryptConfig['mode'], $encryptConfig['iv']);
 				} else {
-					$data = openssl_decrypt($data, $encryptConfig['cipher'], $encryptConfig['key'], $encryptConfig['mode'], $encryptConfig['iv']);
+					$data = openssl_decrypt($data, $encryptConfig['algo'], $encryptConfig['key'], $encryptConfig['mode'], $encryptConfig['iv']);
 				}
 				// remove padded null characters
 				// ===> http://ca.php.net/manual/en/function.mcrypt-decrypt.php#54734
@@ -265,7 +265,7 @@ class Util {
 			}
 		// catch any error
 		} catch (Exception $e) {
-			self::$error = "Crypt error ({$e->getMessage()})";
+			self::$error = 'Crypt error ('.$e->getMessage().')';
 			return false;
 		}
 		// done!
@@ -542,7 +542,7 @@ class Util {
 			if ( !$result ) self::$error = "Error occurred while sending mail ({$mailer->ErrorInfo})";
 		// catch any error
 		} catch (Exception $e) {
-			self::$error = "Exception ({$e->getMessage()})";
+			self::$error = 'Mail error ('.$e->getMessage().')';
 			return false;
 		}
 		// done!
@@ -890,7 +890,7 @@ class Util {
 			if ( !$result ) self::$error = libxml_get_last_error();
 		// catch any error
 		} catch (Exception $e) {
-			self::$error = "XSLT error ({$e->getMessage()})";
+			self::$error = 'XSLT error ('.$e->getMessage().')';
 			return false;
 		}
 		// done!
