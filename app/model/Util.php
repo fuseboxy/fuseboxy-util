@@ -219,16 +219,23 @@ class Util {
 		$cfg = F::config('encrypt');
 		// consider as encrypt key if config is just string
 		if ( is_string($cfg) ) $cfg = array('key' => $cfg);
+		// defult config
+		if ( empty($cfg['vendor']) ) $cfg['vendor'] = ( PHP_MAJOR_VERSION < 7 ) ? 'mcrypt' : 'openssl';
+		if ( empty($cfg['mode'])   ) $cfg['mode']   = ( $cfg['vendor'] == 'mcrypt' ) ? MCRYPT_MODE_ECB : 0;
+		if ( empty($cfg['iv'])     ) $cfg['iv']     = ( $cfg['vendor'] == 'mcrypt' ) ? null : '';
+		// determine key to use
+		if ( !empty($key) ) $key = $key;
+		elseif ( !empty($cfg['key']) ) $key = $cfg['key'];
+		else $key = null;
+		// determine algorithm to use
+		if ( !empty($algo) ) $algo = $algo;
+		elseif ( !empty($cfg['algo']) ) $algo = $cfg['algo'];
+		else $algo = ( $cfg['vendor'] == 'mcrypt' ) ? MCRYPT_RIJNDAEL_256 : 'BF-ECB';
 		// validation
-		if ( empty($cfg['key']) ) {
+		if ( empty($key) ) {
 			self::$error = 'Encrypt key is missing';
 			return false;
 		}
-		// defult config
-		if ( empty($cfg['vendor']) ) $cfg['vendor'] = ( PHP_MAJOR_VERSION < 7 ) ? 'mcrypt' : 'openssl';
-		if ( empty($cfg['algo'])   ) $cfg['algo']   = ( $cfg['vendor'] == 'mcrypt' ) ? MCRYPT_RIJNDAEL_256 : 'BF-ECB';
-		if ( empty($cfg['mode'])   ) $cfg['mode']   = ( $cfg['vendor'] == 'mcrypt' ) ? MCRYPT_MODE_ECB : 0;
-		if ( empty($cfg['iv'])     ) $cfg['iv']     = ( $cfg['vendor'] == 'mcrypt' ) ? null : '';
 		// start
 		try {
 			// url-friendly special character for base64 string replacement
@@ -239,9 +246,9 @@ class Util {
 			// validation & start
 			if ( $action == 'encrypt' ) {
 				if ( $cfg['vendor'] == 'mcrypt' ) {
-					$data = mcrypt_encrypt($cfg['algo'], $cfg['key'], $data, $cfg['mode'], $cfg['iv']);
+					$data = mcrypt_encrypt($algo, $key, $data, $cfg['mode'], $cfg['iv']);
 				} else {
-					$data = openssl_encrypt($data, $cfg['algo'], $cfg['key'], $cfg['mode'], $cfg['iv']);
+					$data = openssl_encrypt($data, $algo, $key, $cfg['mode'], $cfg['iv']);
 				}
 				// base64-encode the encrypted data
 				$data = base64_encode($data);
@@ -255,9 +262,9 @@ class Util {
 				}
 				$data = base64_decode($data);
 				if ( $cfg['vendor'] == 'mcrypt' ) {
-					$data = mcrypt_decrypt($cfg['algo'], $cfg['key'], $data, $cfg['mode'], $cfg['iv']);
+					$data = mcrypt_decrypt($algo, $key, $data, $cfg['mode'], $cfg['iv']);
 				} else {
-					$data = openssl_decrypt($data, $cfg['algo'], $cfg['key'], $cfg['mode'], $cfg['iv']);
+					$data = openssl_decrypt($data, $algo, $key, $cfg['mode'], $cfg['iv']);
 				}
 				// remove padded null characters
 				// ===> http://ca.php.net/manual/en/function.mcrypt-decrypt.php#54734
