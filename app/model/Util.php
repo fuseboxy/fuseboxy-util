@@ -195,10 +195,10 @@ class Util {
 				<structure name="config" scope="$fusebox">
 					<structure name="encrypt">
 						<string name="key" />
-						<string name="library" optional="yes" comments="mcrypt|openssl" />
+						<string name="library" optional="yes" default="mcrypt|openssl" />
 						<string name="cipher" optional="yes" default="~MCRYPT_RIJNDAEL_256~|AES-256-CBC" />
 						<string name="mode" optional="yes" default="~MCRYPT_MODE_ECB~|0" comments="used as options for openssl" />
-						<string name="iv" optional="yes" default="" />
+						<string name="iv" optional="yes" default="" commens="initial vector" />
 					</structure>
 				</structure>
 				<string name="$action" comments="encrypt|decrypt" />
