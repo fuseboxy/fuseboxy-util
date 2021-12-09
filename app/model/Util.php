@@ -192,17 +192,21 @@ class Util {
 		</description>
 		<io>
 			<in>
+				<!-- framework config -->
 				<structure name="config" scope="$fusebox">
 					<structure name="encrypt">
 						<string name="key" />
 						<string name="vendor" optional="yes" default="mcrypt|openssl" />
-						<string name="algo" optional="yes" default="~MCRYPT_RIJNDAEL_256~|AES-256-CBC" />
+						<string name="algo" optional="yes" default="~MCRYPT_RIJNDAEL_256~|BF-ECB" />
 						<string name="mode" optional="yes" default="~MCRYPT_MODE_ECB~|0" comments="used as options for openssl" />
 						<string name="iv" optional="yes" default="" commens="initial vector" />
 					</structure>
 				</structure>
+				<!-- param -->
 				<string name="$action" comments="encrypt|decrypt" />
 				<string name="$data" />
+				<string name="$key" optional="yes" comments="when not specified, use key in config" />
+				<string name="$algo" optional="yes" comments="when not specified, use algo in config" />
 			</in>
 			<out>
 				<string name="~return~" optional="yes" oncondition="success" />
@@ -211,7 +215,7 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	private static function crypt($action, $data) {
+	private static function crypt($action, $data, $key=null, $algo=null) {
 		$encryptConfig = F::config('encrypt');
 		// consider as encrypt key if config is just string
 		if ( is_string($encryptConfig) ) $encryptConfig = array('key' => $encryptConfig);
@@ -272,8 +276,8 @@ class Util {
 		return $data;
 	}
 	// alias methods
-	public static function decrypt($data) { return self::crypt('decrypt', $data); }
-	public static function encrypt($data) { return self::crypt('encrypt', $data); }
+	public static function decrypt($data, $key=null, $algo=null) { return self::crypt('decrypt', $data, $key, $algo); }
+	public static function encrypt($data, $key=null, $algo=null) { return self::crypt('encrypt', $data, $key, $algo); }
 
 
 
