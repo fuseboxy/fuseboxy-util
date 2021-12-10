@@ -277,6 +277,11 @@ class Util {
 			self::$error = 'Crypt error ('.$e->getMessage().')';
 			return false;
 		}
+		// validate result
+		if ( $result === '' ) {
+			self::$error = "Failed to {$action} data";
+			return false;
+		}
 		// done!
 		return $result;
 	}
