@@ -241,35 +241,31 @@ class Util {
 			// url-friendly special character for base64 string replacement
 			// ===> replace plus-sign (+), slash (/), and equal-sign (=) in base64 string
 			// ===> replace by underscore (_), dash (-), and dot (.)
-			$url_unsafe = array('+','/','=');
-			$url_safe = array('_','-','.');
-			// validation & start
+			$url_unsafe = array('+', '/', '=');
+			$url_safe   = array('_', '-', '.');
+			// encryption
 			if ( $action == 'encrypt' ) {
-				if ( $cfg['vendor'] == 'mcrypt' ) {
-					$data = mcrypt_encrypt($algo, $key, $data, $cfg['mode'], $cfg['iv']);
-				} else {
-					$data = openssl_encrypt($data, $algo, $key, $cfg['mode'], $cfg['iv']);
-				}
-				// base64-encode the encrypted data
+				// raw ===> encrypted
+				if ( $cfg['vendor'] == 'mcrypt' ) $data = mcrypt_encrypt($algo, $key, $data, $cfg['mode'], $cfg['iv']);
+				else $data = openssl_encrypt($data, $algo, $key, $cfg['mode'], $cfg['iv']);
+				// encrypted ===> base64
 				$data = base64_encode($data);
-				// make the base64 string more url-friendly
-				for ( $i=0; $i<count($url_unsafe); $i++ ) {
-					$data = str_replace($url_unsafe[$i], $url_safe[$i], $data);
-				}
+				// base64 ===> url-safe
+				$data = str_replace($url_unsafe, $url_safe, $data);
+			// decryption
 			} elseif ( $action == 'decrypt' ) {
-				for ( $i=0; $i<count($url_unsafe); $i++ ) {
-					$data = str_replace($url_safe[$i], $url_unsafe[$i], $data);
-				}
+				// url-safe ===> base64
+				$data = str_replace($url_safe, $url_unsafe, $data);
+				// base64 ===> encrypted
 				$data = base64_decode($data);
-				if ( $cfg['vendor'] == 'mcrypt' ) {
-					$data = mcrypt_decrypt($algo, $key, $data, $cfg['mode'], $cfg['iv']);
-				} else {
-					$data = openssl_decrypt($data, $algo, $key, $cfg['mode'], $cfg['iv']);
-				}
+				// encrypted ===> raw
+				if ( $cfg['vendor'] == 'mcrypt' ) $data = mcrypt_decrypt($algo, $key, $data, $cfg['mode'], $cfg['iv']);
+				else $data = openssl_decrypt($data, $algo, $key, $cfg['mode'], $cfg['iv']);
 				// remove padded null characters
 				// ===> http://ca.php.net/manual/en/function.mcrypt-decrypt.php#54734
 				// ===> http://stackoverflow.com/questions/9781780/why-is-mcrypt-encrypt-putting-binary-characters-at-the-end-of-my-string
 				$data = rtrim($data, "\0");
+			// validation
 			} else {
 				self::$error = "Invalid action ({$action})";
 				return false;
