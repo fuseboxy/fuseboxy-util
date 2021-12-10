@@ -205,8 +205,9 @@ class Util {
 				<!-- param -->
 				<string name="$action" comments="encrypt|decrypt" />
 				<string name="$data" />
-				<string name="$key" optional="yes" comments="when not specified, use key in config" />
-				<string name="$algo" optional="yes" comments="when not specified, use algo in config" />
+				<structure name="$cfg" optional="yes">
+					<string name="*" comments="override corresponding item in framework config" />
+				</structure>
 			</in>
 			<out>
 				<string name="~return~" optional="yes" oncondition="success" />
@@ -215,27 +216,26 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	private static function crypt($action, $data, $key=null, $algo=null) {
-		$cfg = F::config('encrypt');
-		// consider as encrypt key if config is just string
-		if ( is_string($cfg) ) $cfg = array('key' => $cfg);
-		// defult config
-		if ( empty($cfg['vendor']) ) $cfg['vendor'] = ( PHP_MAJOR_VERSION < 7 ) ? 'mcrypt' : 'openssl';
-		if ( empty($cfg['mode'])   ) $cfg['mode']   = ( $cfg['vendor'] == 'mcrypt' ) ? MCRYPT_MODE_ECB : 0;
-		if ( empty($cfg['iv'])     ) $cfg['iv']     = ( $cfg['vendor'] == 'mcrypt' ) ? null : '';
-		// determine key to use
-		if ( !empty($key) ) $key = $key;
-		elseif ( !empty($cfg['key']) ) $key = $cfg['key'];
-		else $key = null;
-		// determine algorithm to use
-		if ( !empty($algo) ) $algo = $algo;
-		elseif ( !empty($cfg['algo']) ) $algo = $cfg['algo'];
-		else $algo = ( $cfg['vendor'] == 'mcrypt' ) ? MCRYPT_RIJNDAEL_256 : 'BF-ECB';
+	private static function crypt($action, $data, $cfg=[]) {
+		// fix custom config
+		if ( empty($cfg) ) $cfg = array();
+		elseif ( is_string($cfg) ) $cfg = array('key' => $cfg);
+		// load & fix base config
+		$baseConfig = F::config('encrypt');
+		if ( empty($baseConfig) ) $baseConfig = array();
+		elseif ( is_string($baseConfig) ) $baseConfig = array('key' => $baseConfig);
+		// merge base config into custom config
+		foreach ( $baseConfig as $baseKey => $baseVal ) $cfg[$baseKey] = $cfg[$baseKey] ?? $baseVal;
 		// validation
-		if ( empty($key) ) {
-			self::$error = 'Encrypt key is missing';
+		if ( empty($cfg['key']) ) {
+			self::$error = 'Encryption key is missing';
 			return false;
 		}
+		// defult config
+		if ( empty($cfg['vendor']) ) $cfg['vendor'] = ( PHP_MAJOR_VERSION < 7 ) ? 'mcrypt' : 'openssl';
+		if ( empty($cfg['algo'])   ) $cfg['algo']   = ( $cfg['vendor'] == 'mcrypt' ) ? MCRYPT_RIJNDAEL_256 : 'BF-ECB';
+		if ( empty($cfg['mode'])   ) $cfg['mode']   = ( $cfg['vendor'] == 'mcrypt' ) ? MCRYPT_MODE_ECB : 0;
+		if ( empty($cfg['iv'])     ) $cfg['iv']     = ( $cfg['vendor'] == 'mcrypt' ) ? null : '';
 		// start
 		try {
 			// url-friendly special character for base64 string replacement
@@ -246,8 +246,8 @@ class Util {
 			// encryption
 			if ( $action == 'encrypt' ) {
 				// raw data ===> encrypted
-				if ( $cfg['vendor'] == 'mcrypt' ) $data = mcrypt_encrypt($algo, $key, $data, $cfg['mode'], $cfg['iv']);
-				else $data = openssl_encrypt($data, $algo, $key, $cfg['mode'], $cfg['iv']);
+				if ( $cfg['vendor'] == 'mcrypt' ) $data = mcrypt_encrypt($cfg['algo'], $cfg['key'], $data, $cfg['mode'], $cfg['iv']);
+				else $data = openssl_encrypt($data, $cfg['algo'], $cfg['key'], $cfg['mode'], $cfg['iv']);
 				// encrypted ===> base64
 				$data = base64_encode($data);
 				// base64 ===> url-safe
@@ -259,8 +259,8 @@ class Util {
 				// base64 ===> encrypted
 				$data = base64_decode($data);
 				// encrypted ===> raw data
-				if ( $cfg['vendor'] == 'mcrypt' ) $data = mcrypt_decrypt($algo, $key, $data, $cfg['mode'], $cfg['iv']);
-				else $data = openssl_decrypt($data, $algo, $key, $cfg['mode'], $cfg['iv']);
+				if ( $cfg['vendor'] == 'mcrypt' ) $data = mcrypt_decrypt($cfg['algo'], $cfg['key'], $data, $cfg['mode'], $cfg['iv']);
+				else $data = openssl_decrypt($data, $cfg['algo'], $cfg['key'], $cfg['mode'], $cfg['iv']);
 				// remove padded null characters
 				// ===> http://ca.php.net/manual/en/function.mcrypt-decrypt.php#54734
 				// ===> http://stackoverflow.com/questions/9781780/why-is-mcrypt-encrypt-putting-binary-characters-at-the-end-of-my-string
@@ -279,8 +279,8 @@ class Util {
 		return $data;
 	}
 	// alias methods
-	public static function decrypt($data, $key=null, $algo=null) { return self::crypt('decrypt', $data, $key, $algo); }
-	public static function encrypt($data, $key=null, $algo=null) { return self::crypt('encrypt', $data, $key, $algo); }
+	public static function decrypt($data, $cfg=[]) { return self::crypt('decrypt', $data, $cfg); }
+	public static function encrypt($data, $cfg=[]) { return self::crypt('encrypt', $data, $cfg); }
 
 
 
