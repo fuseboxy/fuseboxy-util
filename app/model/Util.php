@@ -245,7 +245,7 @@ class Util {
 			$url_safe   = array('_', '-', '.');
 			// encryption
 			if ( $action == 'encrypt' ) {
-				// raw ===> encrypted
+				// raw data ===> encrypted
 				if ( $cfg['vendor'] == 'mcrypt' ) $data = mcrypt_encrypt($algo, $key, $data, $cfg['mode'], $cfg['iv']);
 				else $data = openssl_encrypt($data, $algo, $key, $cfg['mode'], $cfg['iv']);
 				// encrypted ===> base64
@@ -258,7 +258,7 @@ class Util {
 				$data = str_replace($url_safe, $url_unsafe, $data);
 				// base64 ===> encrypted
 				$data = base64_decode($data);
-				// encrypted ===> raw
+				// encrypted ===> raw data
 				if ( $cfg['vendor'] == 'mcrypt' ) $data = mcrypt_decrypt($algo, $key, $data, $cfg['mode'], $cfg['iv']);
 				else $data = openssl_decrypt($data, $algo, $key, $cfg['mode'], $cfg['iv']);
 				// remove padded null characters
