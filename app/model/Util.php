@@ -245,26 +245,28 @@ class Util {
 			$url_safe   = array('_', '-', '.');
 			// encryption
 			if ( $action == 'encrypt' ) {
+				$result = $data;
 				// raw data ===> encrypted
-				if ( $cfg['vendor'] == 'mcrypt' ) $data = mcrypt_encrypt($cfg['algo'], $cfg['key'], $data, $cfg['mode'], $cfg['iv']);
-				else $data = openssl_encrypt($data, $cfg['algo'], $cfg['key'], $cfg['mode'], $cfg['iv']);
+				if ( $cfg['vendor'] == 'mcrypt' ) $result = mcrypt_encrypt($cfg['algo'], $cfg['key'], $result, $cfg['mode'], $cfg['iv']);
+				else $result = openssl_encrypt($result, $cfg['algo'], $cfg['key'], $cfg['mode'], $cfg['iv']);
 				// encrypted ===> base64
-				$data = base64_encode($data);
+				$result = base64_encode($result);
 				// base64 ===> url-safe
-				$data = str_replace($url_unsafe, $url_safe, $data);
+				$result = str_replace($url_unsafe, $url_safe, $result);
 			// decryption
 			} elseif ( $action == 'decrypt' ) {
+				$result = $data;
 				// url-safe ===> base64
-				$data = str_replace($url_safe, $url_unsafe, $data);
+				$result = str_replace($url_safe, $url_unsafe, $result);
 				// base64 ===> encrypted
-				$data = base64_decode($data);
+				$result = base64_decode($result);
 				// encrypted ===> raw data
-				if ( $cfg['vendor'] == 'mcrypt' ) $data = mcrypt_decrypt($cfg['algo'], $cfg['key'], $data, $cfg['mode'], $cfg['iv']);
-				else $data = openssl_decrypt($data, $cfg['algo'], $cfg['key'], $cfg['mode'], $cfg['iv']);
+				if ( $cfg['vendor'] == 'mcrypt' ) $result = mcrypt_decrypt($cfg['algo'], $cfg['key'], $result, $cfg['mode'], $cfg['iv']);
+				else $result = openssl_decrypt($result, $cfg['algo'], $cfg['key'], $cfg['mode'], $cfg['iv']);
 				// remove padded null characters
 				// ===> http://ca.php.net/manual/en/function.mcrypt-decrypt.php#54734
 				// ===> http://stackoverflow.com/questions/9781780/why-is-mcrypt-encrypt-putting-binary-characters-at-the-end-of-my-string
-				$data = rtrim($data, "\0");
+				$result = rtrim($result, "\0");
 			// validation
 			} else {
 				self::$error = "Invalid action ({$action})";
@@ -276,7 +278,7 @@ class Util {
 			return false;
 		}
 		// done!
-		return $data;
+		return $result;
 	}
 	// alias methods
 	public static function decrypt($data, $cfg=[]) { return self::crypt('decrypt', $data, $cfg); }
