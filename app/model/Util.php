@@ -499,19 +499,19 @@ class Util {
 			return false;
 		}
 		// validation
-		if ( !isset($param['from']) ) {
+		if ( empty($param['from']) ) {
 			self::$error = 'Mail sender was not specified';
 			return false;
 		}
-		if ( !isset($param['to']) ) {
+		if ( empty($param['to']) ) {
 			self::$error = 'Mail recipient was not specified';
 			return false;
 		}
-		if ( !isset($param['subject']) ) {
+		if ( empty($param['subject']) ) {
 			self::$error = 'Mail subject was not specified';
 			return false;
 		}
-		if ( !isset($param['body']) ) {
+		if ( empty($param['body']) ) {
 			self::$error = 'Mail body was not specified';
 			return false;
 		}
