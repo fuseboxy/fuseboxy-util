@@ -343,11 +343,13 @@ class Util {
 				<structure name="$headers">
 					<string name="~headerName~" />
 				</structure>
+				<reference name="&$httpStatus" />
 				<reference name="&$responseHeader" />
 				<reference name="&$responseTime" />
 			</in>
 			<out>
 				<string name="~return~" optional="yes" oncondition="success" comments="page response" />
+				<string name="$httpStatus" optional="yes" />
 				<string name="$responseHeader" optional="yes" oncondition="success" />
 				<number name="$responseTime" optional="yes" oncondition="success" />
 				<boolean name="~return~" value="false" optional="yes" oncondition="failure" />
@@ -355,7 +357,7 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function httpRequest($method='GET', $url, $fields=[], $headers=[], &$responseHeader=null, &$responseTime=null) {
+	public static function httpRequest($method='GET', $url, $fields=[], $headers=[], &$httpStatus=null, &$responseHeader=null, &$responseTime=null) {
 		// fix param (when necessary)
 		$method = strtoupper($method);
 		// merge params into url (when necessary)
@@ -431,8 +433,8 @@ class Util {
 		return $pageBody;
 	}
 	// alias methods
-	public static function getPage ($url,             &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET',  $url, [],      [], $responseHeader, $responseTime); }
-	public static function postPage($url, $fields=[], &$responseHeader=null, &$responseTime=null) { return self::httpRequest('POST', $url, $fields, [], $responseHeader, $responseTime); }
+	public static function getPage ($url,             &$httpStatus=null, &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET',  $url, [],      [], $httpStatus, $responseHeader, $responseTime); }
+	public static function postPage($url, $fields=[], &$httpStatus=null, &$responseHeader=null, &$responseTime=null) { return self::httpRequest('POST', $url, $fields, [], $httpStatus, $responseHeader, $responseTime); }
 
 
 
