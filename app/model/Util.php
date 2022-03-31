@@ -469,7 +469,7 @@ class Util {
 				<!-- parameter -->
 				<structure name="$param">
 					<datetime name="datetime" optional="yes" />
-					<string name="from_name" optional="yes" />
+					<string name="from_name|fromName" optional="yes" />
 					<string name="from" optional="yes" default="~smtp user~" />
 					<array name="to" comments="auto tranform comma-or-colon-delimited list to array" />
 					<array name="cc" optional="yes" comments="auto tranform comma-or-colon-delimited list to array" />
@@ -493,6 +493,10 @@ class Util {
 				return false;
 			}
 			require_once($path);
+		}
+		// fix param
+		if ( !empty($param['fromName']) and empty($param['from_name']) ) {
+			$param['from_name'] = $param['fromName'];
 		}
 		// load config (when necessary)
 		$smtpConfig = F::config('smtp');
