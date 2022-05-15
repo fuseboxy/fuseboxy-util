@@ -716,6 +716,53 @@ $filename = 'work_in_progress.pdf';
 	/**
 	<fusedoc>
 		<description>
+			load file from server and feed binary stream to browser
+		</description>
+		<io>
+			<in>
+				<string name="$filePath" comments="full server path of file" />
+				<structure name="$options">
+					<boolean name="download" optional="yes" default="false" />
+					<boolean name="deleteAfterward" optional="yes" default="false" />
+				</structure>
+			</in>
+			<out />
+		</io>
+	</fusedoc>
+	*/
+	public static function streamFile($filePath, $options=[]) {
+		// default options
+		if ( !isset($options['download'])        ) $options['download']        = false;
+		if ( !isset($options['deleteAfterward']) ) $options['deleteAfterward'] = false;
+		// check file existence
+		if ( !is_file($filePath) ) {
+			self::$error = "File not found ({$fileName})";
+			return false;
+		}
+		// get file info
+		$fileName = pathinfo($filePath, PATHINFO_BASENAME);
+		$fileType = mime_content_type($filePath);
+		$fileSize = filesize($filePath);
+		// send correct header
+		header('Content-Type: '.$fileType);
+		header('Content-Length: '.$fileSize);
+		if ( $options['download'] ) header('Content-Disposition: Attachment; filename='.$fileName); 
+		// open file in binary mode
+		$fp = fopen($filePath, 'rb');
+		// stream file to client
+		fpassthru($fp);
+		// remove file afterward
+		if ( $options['deleteAfterward'] ) unlink($filePath);
+		// abort further operation
+		die();
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
 			generate (psuedo-random) UUID
 			===> http://php.net/manual/en/function.uniqid.php#94959
 		</description>
