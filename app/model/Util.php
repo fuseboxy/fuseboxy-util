@@ -13,6 +13,10 @@ class Util {
 			__DIR__.'/../../lib/markdownify/2.3.1/src/Converter.php',
 			__DIR__.'/../../lib/markdownify/2.3.1/src/ConverterExtra.php',
 		),
+		'html2pdf' => array(
+
+
+		),
 		'mail' => array(
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/PHPMailer.php',
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/Exception.php',
@@ -40,7 +44,7 @@ class Util {
 	/**
 	<fusedoc>
 		<description>
-			export data into excel file (in xlsx format)
+			export data into excel file (in xlsx format) & save into upload directory
 		</description>
 		<io>
 			<in>
@@ -319,6 +323,71 @@ class Util {
 		// done!
 		$parser = new Markdownify\Converter;
 		return $parser->parseString($html);
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			convert html content into PDF file & save into upload directory
+		</description>
+		<io>
+			<in>
+				<!-- config -->
+				<structure name="config" scope="$fusebox">
+					<string name="uploadDir" />
+					<string name="uploadUrl" />
+				</structure>
+				<!-- parameters -->
+				<string name="$filePath" comments="relative path to upload directory" />
+				<string name="$html" />
+				<structure name="$options" optional="yes" default="~emptyArray~" />
+			</in>
+			<out>
+				<!-- file output -->
+				<file name="~uploadDir~/~filePath~" />
+				<!-- return value -->
+				<structure name="~return~">
+					<string name="path" />
+					<string name="url" />
+				</structure>
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function html2pdf($filePath, $html, $options=[]) {
+		// validate config
+		if ( empty( F::config('uploadDir') ) ) {
+			self::$error = 'Config [uploadDir] is required';
+			return false;
+		} elseif ( empty( F::config('uploadUrl') ) ) {
+			self::$error = 'Config [uploadUrl] is required';
+			return false;
+		}
+		// useful variables
+		$fileDir  = pathinfo($filePath, PATHINFO_DIRNAME);
+		$filename = pathinfo($filePath, PATHINFO_BASENAME);
+		$baseDir  = F::config('uploadDir').$fileDir.'/';
+		$baseUrl  = F::config('uploadUrl').$fileDir.'/';
+		// create directory (when necessary)
+		if ( !is_dir($baseDir) and !mkdir($baseDir, 0777) ) {
+			$err = error_get_last();
+			self::$error = $err['message'];
+			return false;
+		}
+
+
+/********** WORK-IN-PROGRESS **********/
+$filename = 'work_in_progress.pdf';
+
+
+		// done!
+		return array(
+			'path' => $baseDir.$filename,
+			'url'  => $baseUrl.$filename,
+		);
 	}
 
 
