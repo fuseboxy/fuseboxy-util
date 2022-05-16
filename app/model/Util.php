@@ -731,6 +731,7 @@ $filename = 'work_in_progress.pdf';
 	</fusedoc>
 	*/
 	public static function streamFile($filePath, $options=[]) {
+		$fileName = pathinfo($filePath, PATHINFO_BASENAME);
 		// default options
 		if ( !isset($options['download'])        ) $options['download']        = false;
 		if ( !isset($options['deleteAfterward']) ) $options['deleteAfterward'] = false;
@@ -740,7 +741,6 @@ $filename = 'work_in_progress.pdf';
 			return false;
 		}
 		// get file info
-		$fileName = pathinfo($filePath, PATHINFO_BASENAME);
 		$fileType = mime_content_type($filePath);
 		$fileSize = filesize($filePath);
 		// send correct header
