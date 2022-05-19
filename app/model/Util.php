@@ -438,7 +438,7 @@ $filename = 'work_in_progress.pdf';
 		}
 		// transform headers
 		$headers = array_map(function($key, $val){
-			return "{$key} : {$val}";
+			return "{$key}: {$val}";
 		}, array_keys($headers), $headers);
 		// apply cookie file (to avoid redirect loop when target server check cookies)
 		$cookie_file = sys_get_temp_dir().'/cookies/'.md5($_SERVER['REMOTE_ADDR']).'.txt';
