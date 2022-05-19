@@ -493,6 +493,15 @@ $filename = 'work_in_progress.pdf';
 		$pageBody = substr($response, $headerSize);
 		if ( $response === false ) $pageError = curl_error($ch);
 		curl_close($ch);
+		// parse response header
+		$arr = array_filter(array_map('trim', explode("\n", $responseHeader)));
+		$responseHeader = array();
+		foreach ( $arr as $i => $item ) {
+			if ( stripos($item, ':') !== false ) {
+				list($key, $val) = array_map('trim', explode(':', $item));
+				$responseHeader[$key] = $val;
+			}
+		}
 		// validate response
 		if ( isset($pageError) ) {
 			self::$error = $pageError;
