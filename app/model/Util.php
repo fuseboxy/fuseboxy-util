@@ -498,7 +498,7 @@ $filename = 'work_in_progress.pdf';
 		$responseHeader = array();
 		foreach ( $arr as $i => $item ) {
 			if ( stripos($item, ':') !== false ) {
-				list($key, $val) = array_map('trim', explode(':', $item));
+				list($key, $val) = array_map('trim', explode(':', $item, 2));
 				$responseHeader[$key] = $val;
 			}
 		}
