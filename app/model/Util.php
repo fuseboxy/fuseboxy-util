@@ -13,10 +13,7 @@ class Util {
 			__DIR__.'/../../lib/markdownify/2.3.1/src/Converter.php',
 			__DIR__.'/../../lib/markdownify/2.3.1/src/ConverterExtra.php',
 		),
-		'html2pdf' => array(
-
-
-		),
+		'html2pdf' => __DIR__.'/../../lib/fpdf/1.84/fpdf.php',
 		'mail' => array(
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/PHPMailer.php',
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/Exception.php',
