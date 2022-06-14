@@ -84,10 +84,10 @@ class Util {
 		// mark start time
 		$startTime = microtime(true);
 		// validate config
-		if ( empty( F::config('uploadDir') ) ) {
+		if ( empty(F::config('uploadDir')) ) {
 			self::$error = 'Config [uploadDir] is required';
 			return false;
-		} elseif ( empty( F::config('uploadUrl') ) ) {
+		} elseif ( empty(F::config('uploadUrl')) ) {
 			self::$error = 'Config [uploadUrl] is required';
 			return false;
 		}
@@ -97,10 +97,14 @@ class Util {
 		$baseDir  = F::config('uploadDir').$fileDir.'/';
 		$baseUrl  = F::config('uploadUrl').$fileDir.'/';
 		// create directory (when necessary)
-		if ( !is_dir($baseDir) and !mkdir($baseDir, 0777) ) {
-			$err = error_get_last();
-			self::$error = $err['message'];
-			return false;
+		$dir2create = F::config('uploadDir');
+		foreach ( explode('/', $fileDir) as $subDir ) {
+			$dir2create .= $subDir.'/';
+			if ( !is_dir($dir2create) and !mkdir($dir2create, 0777) ) {
+				$err = error_get_last();
+				self::$error = $err['message'];
+				return false;
+			}
 		}
 		// create blank spreadsheet
 		$spreadsheet = new PhpOffice\PhpSpreadsheet\Spreadsheet();
@@ -355,35 +359,86 @@ class Util {
 	</fusedoc>
 	*/
 	public static function html2pdf($filePath, $html, $options=[]) {
+		// load library
+		$path = self::$libPath['html2pdf'];
+		if ( !is_file($path) ) {
+			self::$error = "FPDF library is missing ({$path})";
+			return false;
+		}
+		require_once($path);
 		// validate config
-		if ( empty( F::config('uploadDir') ) ) {
+		if ( empty(F::config('uploadDir')) ) {
 			self::$error = 'Config [uploadDir] is required';
 			return false;
-		} elseif ( empty( F::config('uploadUrl') ) ) {
+		} elseif ( empty(F::config('uploadUrl')) ) {
 			self::$error = 'Config [uploadUrl] is required';
 			return false;
 		}
 		// useful variables
 		$fileDir  = pathinfo($filePath, PATHINFO_DIRNAME);
-		$filename = pathinfo($filePath, PATHINFO_BASENAME);
-		$baseDir  = F::config('uploadDir').$fileDir.'/';
+		$fileName = pathinfo($filePath, PATHINFO_BASENAME);
+		$baseDir = F::config('uploadDir').$fileDir.'/';
 		$baseUrl  = F::config('uploadUrl').$fileDir.'/';
 		// create directory (when necessary)
-		if ( !is_dir($baseDir) and !mkdir($baseDir, 0777) ) {
-			$err = error_get_last();
-			self::$error = $err['message'];
-			return false;
+		$dir2create = F::config('uploadDir');
+		foreach ( explode('/', $fileDir) as $subDir ) {
+			$dir2create .= $subDir.'/';
+			if ( !is_dir($dir2create) and !mkdir($dir2create, 0777) ) {
+				$err = error_get_last();
+				self::$error = $err['message'];
+				return false;
+			}
 		}
 
 
-/********** WORK-IN-PROGRESS **********/
-$filename = 'work_in_progress.pdf';
+$pdf = new FPDF();
+$pdf->AddPage();
+$pdf->SetFont('Arial','B',16);
+$pdf->Cell(40,10,$html);
+$pdf->Output('F', $baseDir.$fileName);
 
+/*
+require('WriteHTML.php');
+
+$pdf=new PDF_HTML();
+
+$pdf->AliasNbPages();
+$pdf->SetAutoPageBreak(true, 15);
+
+$pdf->AddPage();
+$pdf->Image('logo.png',18,13,33);
+$pdf->SetFont('Arial','B',14);
+$pdf->WriteHTML('<para><h1>PHPGang Programming Blog, Tutorials, jQuery, Ajax, PHP, MySQL and Demos</h1><br>
+Website: <u>www.phpgang.com</u></para><br><br>How to Convert HTML to PDF with fpdf example');
+
+$pdf->SetFont('Arial','B',7); 
+$htmlTable='<TABLE>
+<TR>
+<TD>Name:</TD>
+<TD>'.$_POST['name'].'</TD>
+</TR>
+<TR>
+<TD>Email:</TD>
+<TD>'.$_POST['email'].'</TD>
+</TR>
+<TR>
+<TD>URl:</TD>
+<TD>'.$_POST['url'].'</TD>
+</TR>
+<TR>
+<TD>Comment:</TD>
+<TD>'.$_POST['comment'].'</TD>
+</TR>
+</TABLE>';
+$pdf->WriteHTML2("<br><br><br>$htmlTable");
+$pdf->SetFont('Arial','B',6);
+$pdf->Output(); 
+*/
 
 		// done!
 		return array(
-			'path' => $baseDir.$filename,
-			'url'  => $baseUrl.$filename,
+			'path' => $baseDir.$fileName,
+			'url'  => $baseUrl.$fileName,
 		);
 	}
 
