@@ -651,20 +651,48 @@ class Util {
 				</structure>
 				<!-- parameters -->
 				<string name="$filePath" comments="relative path to upload directory" />
-				<structure name="$fileData">
-					<array name="~worksheetName~">
-						<structure name="+" comments="row">
-							<string name="~columnName~" />
-						</structure>
-					</array>
-				</structure>
-				<structure name="$options">
-					<boolean name="showRecordCount" optional="yes" />
-					<structure name="columnWidth" optional="yes">
-						<array name="~worksheetName~">
-							<number name="+" />
+				<array name="$fileData">
+					<structure name="+">
+						<!-- paragraph type -->
+						<string name="type" default="p" value="h1|h2|h3|h4|h5|h6|small|p|ol|ul|br|hr|img|pagebreak">
+							[h1..h6]    headers in biggest to smallest font size
+							[small]     small text
+							[p]         paragraph (with bottom margin)
+							[ol]        order list (1,2,3,4,..)
+							[ul]        unorder list (just bullet)
+							[br]        linebreak
+							[hr]        horizontal line
+							[img]       image
+							[pagebreak] page break
+						</string>
+						<!-- value -->
+						<string name="value" oncondition="h1..h6|small|p" />
+						<array name="list" oncondition="ol|ul">
+							<string name="+" />
 						</array>
+						<string name="src" oncondition="img" />
+						<!-- styling -->
+						<boolean name="bold" default="false" />
+						<boolean name="underline" default="false" />
+						<boolean name="italic" default="false" />
+						<boolean name="strike|strikethrough" default="false" />
+						<string name="color" value="black|red|blue|.." />
+						<number name="fontsize" optional="yes" />
+						<!-- alignment -->
+						<string name="align" default="L" value="L|C|R" oncondition="h1..h6|small|p|img" />
+						<!-- options -->
+						<number name="repeat" optional="yes" default="1" oncondition="br" />
+						<string name="url" optional="yes" />
+						<number name="height" optional="yes" oncondition="img" />
+						<number name="width" optional="yes" oncondition="img" />
 					</structure>
+				</array>
+				<structure name="$options">
+					<string name="paperSize" default="A4" />
+					<string name="orientation" default="P" value="P|L" />
+					<string name="fontFamily" default="Arial" />
+					<string name="fontWeight" default="B" />
+					<string name="fontSize" default="16" />
 				</structure>
 			</in>
 			<out>
