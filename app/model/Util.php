@@ -708,6 +708,9 @@ class Util {
 	</fusedoc>
 	*/
 	public static function pdf($filePath=null, $fileData, $options=[]) {
+		// default options
+
+
 		// load library
 		$path = self::$libPath['pdf'];
 		if ( !is_file($path) ) {
@@ -803,13 +806,12 @@ $pdf->Output('F', $result['path']);
 	</fusedoc>
 	*/
 	public static function streamFile($filePath, $options=[]) {
-		$fileName = pathinfo($filePath, PATHINFO_BASENAME);
 		// default options
-		if ( !isset($options['download'])        ) $options['download']        = false;
-		if ( !isset($options['deleteAfterward']) ) $options['deleteAfterward'] = false;
+		$options['download'] = $options['download'] ?? false;
+		$options['deleteAfterward'] = $options['deleteAfterward'] ?? false;
 		// check file existence
 		if ( !is_file($filePath) ) {
-			self::$error = "File not found ({$fileName})";
+			self::$error = "File not found ({$filePath})";
 			return false;
 		}
 		// get file info
@@ -818,7 +820,7 @@ $pdf->Output('F', $result['path']);
 		// send correct header
 		header('Content-Type: '.$fileType);
 		header('Content-Length: '.$fileSize);
-		if ( $options['download'] ) header('Content-Disposition: Attachment; filename='.$fileName); 
+		if ( $options['download'] ) header('Content-Disposition: Attachment; filename='.pathinfo($filePath, PATHINFO_BASENAME)); 
 		// open file in binary mode
 		$fp = fopen($filePath, 'rb');
 		// stream file to client
@@ -980,7 +982,11 @@ $pdf->Output('F', $result['path']);
 	</fusedoc>
 	*/
 	public static function xls2array($file, $options=[]) {
-		$result = array();
+		// default options
+		$options['startRow'] = $options['startRow'] ?? 1;
+		$options['worksheet'] = $options['worksheet'] ?? 0;
+		$options['firstRowAsHeader'] = $options['firstRowAsHeader'] ?? true;
+		$options['convertHeaderCase'] = $options['convertHeaderCase'] ?? true;
 		// load library
 		foreach ( self::$libPath['xls2array'] as $path ) {
 			if ( !is_file($path) ) {
@@ -989,13 +995,6 @@ $pdf->Output('F', $result['path']);
 			}
 			require_once($path);
 		}
-		// default options
-		$options = array(
-			'startRow' => isset($options['startRow']) ? $options['startRow'] : 1,
-			'worksheet' => isset($options['worksheet']) ? $options['worksheet'] : 0,
-			'firstRowAsHeader' => isset($options['firstRowAsHeader']) ? $options['firstRowAsHeader'] : true,
-			'convertHeaderCase' => isset($options['convertHeaderCase']) ? $options['convertHeaderCase'] : true,
-		);
 		// validation
 		$fileExt = strtoupper( pathinfo($file, PATHINFO_EXTENSION) );
 		if ( !is_file($file) ) {
@@ -1043,6 +1042,7 @@ $pdf->Output('F', $result['path']);
 			}
 		}
 		// go through each row and create new record
+		$result = array();
 		foreach ( $data as $row => $rowData ) {
 			$item = array();
 			foreach ( $colNames as $colIndex => $colName ) {
