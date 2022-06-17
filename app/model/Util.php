@@ -114,7 +114,7 @@ class Util {
 		$filePath  = str_ireplace('\\', '/', $filePath);
 		$uploadDir = str_ireplace('\\', '/', F::config('uploadDir'));
 		$uploadUrl = str_ireplace('\\', '/', F::config('uploadUrl'));
-		// prepare result container
+		// determine output location
 		$result = array(
 			'path' => $uploadDir.( ( substr($uploadDir, -1) != '/' ) ? '/' : '' ).$filePath,
 			'url'  => $uploadUrl.( ( substr($uploadUrl, -1) != '/' ) ? '/' : '' ).$filePath,
@@ -654,16 +654,16 @@ class Util {
 				<array name="$fileData">
 					<structure name="+">
 						<!-- paragraph type -->
-						<string name="type" default="p" value="h1|h2|h3|h4|h5|h6|small|p|ol|ul|br|hr|img|pagebreak">
-							[h1..h6]    headers in biggest to smallest font size
-							[small]     small text
+						<string name="type" default="p" value="p|h1|h2|h3|h4|h5|h6|small|ol|ul|br|hr|img|pagebreak">
 							[p]         paragraph (with bottom margin)
+							[h1..h6]    headings in biggest to smallest font size
+							[small]     small text
 							[ol]        order list (1,2,3,4,..)
 							[ul]        unorder list (just bullet)
-							[br]        linebreak
+							[br]        line-break
 							[hr]        horizontal line
 							[img]       image
-							[pagebreak] page break
+							[pagebreak] page-break
 						</string>
 						<!-- value -->
 						<string name="value" oncondition="h1..h6|small|p" />
@@ -677,9 +677,9 @@ class Util {
 						<boolean name="italic" default="false" />
 						<boolean name="strike|strikethrough" default="false" />
 						<string name="color" value="black|red|blue|.." />
-						<number name="fontsize" optional="yes" />
+						<number name="fontSize" optional="yes" />
 						<!-- alignment -->
-						<string name="align" default="L" value="L|C|R" oncondition="h1..h6|small|p|img" />
+						<string name="align" default="L" value="L|C|R" oncondition="p|h1..h6|small|img" />
 						<!-- options -->
 						<number name="repeat" optional="yes" default="1" oncondition="br" />
 						<string name="url" optional="yes" />
@@ -707,10 +707,13 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function pdf($filePath=null, $fileData, $options=[]) {
+	public static function pdf($filePath, $fileData, $options=[]) {
 		// default options
-
-
+		$options['paperSize']   = $options['paperSize'] ?? 'A4';
+		$options['orientation'] = $options['orientation'] ?? 'P';
+		$options['fontFamily']  = $options['fontFamily'] ?? 'Arial';
+		$options['fontWeight']  = $options['fontWeight'] ?? 'B';
+		$options['fontSize']    = $options['fontSize'] ?? '16';
 		// load library
 		$path = self::$libPath['pdf'];
 		if ( !is_file($path) ) {
@@ -722,7 +725,7 @@ class Util {
 		$filePath  = str_ireplace('\\', '/', $filePath);
 		$uploadDir = str_ireplace('\\', '/', F::config('uploadDir'));
 		$uploadUrl = str_ireplace('\\', '/', F::config('uploadUrl'));
-		// prepare result container
+		// determine output location
 		$result = array(
 			'path' => $uploadDir.( ( substr($uploadDir, -1) != '/' ) ? '/' : '' ).$filePath,
 			'url'  => $uploadUrl.( ( substr($uploadUrl, -1) != '/' ) ? '/' : '' ).$filePath,
@@ -734,15 +737,47 @@ class Util {
 			self::$error = $err['message'];
 			return false;
 		}
+		// start!
+		$pdf = new FPDF();
+		$pdf->AddPage();
+		// basic settings
+		$pdf->SetFont($options['fontFamily'], $options['fontWeight'], $options['fontSize']);
+		// go through each paragraph
+		foreach ( $fileData as $paragraph ) {
+			$paragraph['type'] = strtolower( $paragraph['type'] ?? 'p' );
+			// paragraph
+			if ( $paragraph['type'] == 'p' ) {
 
+			// heading
+			} elseif ( in_array($paragraph['type'], ['h1','h2','h3','h4','h5','h6']) ) {
 
-$pdf = new FPDF();
-$pdf->AddPage();
-$pdf->SetFont('Arial','B',16);
+			// list
+			} elseif ( in_array($paragraph['type'], ['ol','ul']) ) {
+
+			// small text
+			} elseif ( $paragraph['type'] == 'small' ) {
+
+			// line-break
+			} elseif ( $paragraph['type'] == 'br' ) {
+
+			// horizontal line
+			} elseif ( $paragraph['type'] == 'hr' ) {
+
+			// image
+			} elseif ( $paragraph['type'] == 'img' ) {
+
+			// page-break
+			} elseif ( $paragraph['type'] == 'pagebreak' ) {
+				$pdf->AddPage();
+			// unknown...
+			} else {
+				self::$error = 'Unknown paragraph type ('.$paragraph['type'].')';
+				return false;
+			}
+		} // foreach-paragraph
 $pdf->Cell(40,10,'Hello World!');
-$pdf->Output('F', $result['path']);
-
-
+		// save into file
+		$pdf->Output('F', $result['path']);
 		// done!
 		return $result;
 	}
