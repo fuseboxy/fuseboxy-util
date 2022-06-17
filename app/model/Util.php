@@ -110,13 +110,18 @@ class Util {
 				return false;
 			}
 		}
-		// useful variables
-		$fileDir  = pathinfo($filePath, PATHINFO_DIRNAME);
-		$filename = pathinfo($filePath, PATHINFO_BASENAME);
-		$baseDir  = F::config('uploadDir').$fileDir.'/';
-		$baseUrl  = F::config('uploadUrl').$fileDir.'/';
+		// unify directory separator
+		$filePath  = str_ireplace('\\', '/', $filePath);
+		$uploadDir = str_ireplace('\\', '/', F::config('uploadDir'));
+		$uploadUrl = str_ireplace('\\', '/', F::config('uploadUrl'));
+		// prepare result container
+		$result = array(
+			'path' => $uploadDir.( ( substr($uploadDir, -1) != '/' ) ? '/' : '' ).$filePath,
+			'url'  => $uploadUrl.( ( substr($uploadUrl, -1) != '/' ) ? '/' : '' ).$filePath,
+		);
 		// create directory (when necessary)
-		if ( !is_dir($baseDir) and !mkdir($baseDir, 0777, true) ) {
+		$dir2create = dirname($result['path']);
+		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
 			$err = error_get_last();
 			self::$error = $err['message'];
 			return false;
@@ -194,12 +199,9 @@ class Util {
 		$spreadsheet->setActiveSheetIndex(0);
 		// write to report
 		$writer = new PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-		$writer->save($baseDir.$filename);
+		$writer->save($result['path']);
 		// done!
-		return array(
-			'path' => $baseDir.$filename,
-			'url'  => $baseUrl.$filename,
-		);
+		return $result;
 	}
 
 
@@ -685,32 +687,33 @@ class Util {
 			return false;
 		}
 		require_once($path);
-		// validate config
-		if ( empty(F::config('uploadDir')) ) {
-			self::$error = 'Config [uploadDir] is required';
-			return false;
-		} elseif ( empty(F::config('uploadUrl')) ) {
-			self::$error = 'Config [uploadUrl] is required';
-			return false;
-		}
-		// useful variables
-		$fileDir  = pathinfo($filePath, PATHINFO_DIRNAME);
-		$fileName = pathinfo($filePath, PATHINFO_BASENAME);
-		$baseDir = F::config('uploadDir').$fileDir.'/';
-		$baseUrl  = F::config('uploadUrl').$fileDir.'/';
+		// unify directory separator
+		$filePath  = str_ireplace('\\', '/', $filePath);
+		$uploadDir = str_ireplace('\\', '/', F::config('uploadDir'));
+		$uploadUrl = str_ireplace('\\', '/', F::config('uploadUrl'));
+		// prepare result container
+		$result = array(
+			'path' => $uploadDir.( ( substr($uploadDir, -1) != '/' ) ? '/' : '' ).$filePath,
+			'url'  => $uploadUrl.( ( substr($uploadUrl, -1) != '/' ) ? '/' : '' ).$filePath,
+		);
 		// create directory (when necessary)
-		if ( !is_dir($baseDir) and !mkdir($baseDir, 0777, true) ) {
+		$dir2create = dirname($result['path']);
+		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
 			$err = error_get_last();
 			self::$error = $err['message'];
 			return false;
 		}
 
 
+$pdf = new FPDF();
+$pdf->AddPage();
+$pdf->SetFont('Arial','B',16);
+$pdf->Cell(40,10,'Hello World!');
+$pdf->Output('F', $result['path']);
+
+
 		// done!
-		return array(
-			'path' => $baseDir.$fileName,
-			'url'  => $baseUrl.$fileName,
-		);
+		return $result;
 	}
 
 
