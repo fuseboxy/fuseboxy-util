@@ -13,7 +13,6 @@ class Util {
 			__DIR__.'/../../lib/markdownify/2.3.1/src/Converter.php',
 			__DIR__.'/../../lib/markdownify/2.3.1/src/ConverterExtra.php',
 		),
-		'html2pdf' => __DIR__.'/../../lib/fpdf/1.84/fpdf.php',
 		'mail' => array(
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/PHPMailer.php',
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/Exception.php',
@@ -21,6 +20,7 @@ class Util {
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/OAuth.php',
 		),
 		'md2html' => __DIR__.'/../../lib/parsedown/1.7.4/Parsedown.php',
+		'pdf' => __DIR__.'/../../lib/fpdf/1.84/fpdf.php',
 		'phpQuery' => __DIR__.'/../../lib/phpquery/2.0.1/phpQuery.php',
 		'xls2array' => array(
 			__DIR__.'/../../lib/simplexls/0.9.5/src/SimpleXLS.php',
@@ -750,6 +750,91 @@ $pdf->Output();
 		// done!
 		$parser = new Parsedown();
 		return $parser->text($md);
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			generate PDF file with provided data
+		</description>
+		<io>
+			<in>
+				<!-- config -->
+				<structure name="config" scope="$fusebox">
+					<string name="uploadDir" />
+					<string name="uploadUrl" />
+				</structure>
+				<!-- parameters -->
+				<string name="$filePath" comments="relative path to upload directory" />
+				<structure name="$fileData">
+					<array name="~worksheetName~">
+						<structure name="+" comments="row">
+							<string name="~columnName~" />
+						</structure>
+					</array>
+				</structure>
+				<structure name="$options">
+					<boolean name="showRecordCount" optional="yes" />
+					<structure name="columnWidth" optional="yes">
+						<array name="~worksheetName~">
+							<number name="+" />
+						</array>
+					</structure>
+				</structure>
+			</in>
+			<out>
+				<!-- file output -->
+				<file name="~uploadDir~/~filePath~" optional="yes" oncondition="when {filePath} specified" />
+				<!-- return value -->
+				<structure name="~return~" optional="yes" oncondition="when {filePath} specified">
+					<string name="path" />
+					<string name="url" />
+				</structure>
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function pdf($filePath=null, $fileData, $options=[]) {
+		// load library
+		$path = self::$libPath['pdf'];
+		if ( !is_file($path) ) {
+			self::$error = "FPDF library is missing ({$path})";
+			return false;
+		}
+		require_once($path);
+		// validate config
+		if ( empty(F::config('uploadDir')) ) {
+			self::$error = 'Config [uploadDir] is required';
+			return false;
+		} elseif ( empty(F::config('uploadUrl')) ) {
+			self::$error = 'Config [uploadUrl] is required';
+			return false;
+		}
+		// useful variables
+		$fileDir  = pathinfo($filePath, PATHINFO_DIRNAME);
+		$fileName = pathinfo($filePath, PATHINFO_BASENAME);
+		$baseDir = F::config('uploadDir').$fileDir.'/';
+		$baseUrl  = F::config('uploadUrl').$fileDir.'/';
+		// create directory (when necessary)
+		$dir2create = F::config('uploadDir');
+		foreach ( explode('/', $fileDir) as $subDir ) {
+			$dir2create .= $subDir.'/';
+			if ( !is_dir($dir2create) and !mkdir($dir2create, 0777) ) {
+				$err = error_get_last();
+				self::$error = $err['message'];
+				return false;
+			}
+		}
+
+
+		// done!
+		return array(
+			'path' => $baseDir.$fileName,
+			'url'  => $baseUrl.$fileName,
+		);
 	}
 
 
