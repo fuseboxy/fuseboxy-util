@@ -83,6 +83,13 @@ class Util {
 	public static function array2xls($filePath, $fileData, $options=[]) {
 		// mark start time
 		$startTime = microtime(true);
+		// check library
+		foreach ( self::$libPath['array2xls'] as $libClass ) {
+			if ( !class_exists($path) ) {
+				self::$error = "PhpSpreadsheet library is missing ({$libClass})";
+				return false;
+			}
+		}
 		// validate config
 		if ( empty(F::config('uploadDir')) ) {
 			self::$error = 'Config [uploadDir] is required';
