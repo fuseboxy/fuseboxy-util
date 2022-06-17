@@ -116,14 +116,10 @@ class Util {
 		$baseDir  = F::config('uploadDir').$fileDir.'/';
 		$baseUrl  = F::config('uploadUrl').$fileDir.'/';
 		// create directory (when necessary)
-		$dir2create = F::config('uploadDir');
-		foreach ( explode('/', $fileDir) as $subDir ) {
-			$dir2create .= $subDir.'/';
-			if ( !is_dir($dir2create) and !mkdir($dir2create, 0777) ) {
-				$err = error_get_last();
-				self::$error = $err['message'];
-				return false;
-			}
+		if ( !is_dir($baseDir) and !mkdir($baseDir, 0777, true) ) {
+			$err = error_get_last();
+			self::$error = $err['message'];
+			return false;
 		}
 		// create blank spreadsheet
 		$spreadsheet = new PhpOffice\PhpSpreadsheet\Spreadsheet();
@@ -399,14 +395,10 @@ class Util {
 		$baseDir = F::config('uploadDir').$fileDir.'/';
 		$baseUrl  = F::config('uploadUrl').$fileDir.'/';
 		// create directory (when necessary)
-		$dir2create = F::config('uploadDir');
-		foreach ( explode('/', $fileDir) as $subDir ) {
-			$dir2create .= $subDir.'/';
-			if ( !is_dir($dir2create) and !mkdir($dir2create, 0777) ) {
-				$err = error_get_last();
-				self::$error = $err['message'];
-				return false;
-			}
+		if ( !is_dir($baseDir) and !mkdir($baseDir, 0777, true) ) {
+			$err = error_get_last();
+			self::$error = $err['message'];
+			return false;
 		}
 
 
@@ -819,14 +811,10 @@ $pdf->Output();
 		$baseDir = F::config('uploadDir').$fileDir.'/';
 		$baseUrl  = F::config('uploadUrl').$fileDir.'/';
 		// create directory (when necessary)
-		$dir2create = F::config('uploadDir');
-		foreach ( explode('/', $fileDir) as $subDir ) {
-			$dir2create .= $subDir.'/';
-			if ( !is_dir($dir2create) and !mkdir($dir2create, 0777) ) {
-				$err = error_get_last();
-				self::$error = $err['message'];
-				return false;
-			}
+		if ( !is_dir($baseDir) and !mkdir($baseDir, 0777, true) ) {
+			$err = error_get_last();
+			self::$error = $err['message'];
+			return false;
 		}
 
 
