@@ -83,7 +83,7 @@ class Util {
 	public static function array2xls($filePath, $fileData, $options=[]) {
 		// mark start time
 		$startTime = microtime(true);
-		// check library
+		// validate library
 		foreach ( self::$libPath['array2xls'] as $libClass ) {
 			if ( !class_exists($path) ) {
 				self::$error = "PhpSpreadsheet library is missing ({$libClass})";
@@ -97,6 +97,18 @@ class Util {
 		} elseif ( empty(F::config('uploadUrl')) ) {
 			self::$error = 'Config [uploadUrl] is required';
 			return false;
+		}
+		// validate data format
+		if ( !is_array($fileData) ) {
+			self::$error = 'Invalid data structure for Excel (Array is required)';
+			return false;
+		} elseif ( !empty($fileData) ) {
+			$firstWorksheetKey = array_key_first($fileData);
+			$firstWorksheetData = $fileData[$firstWorksheetKey];
+			if ( !is_array($firstWorksheetData) ) {
+				self::$error = 'Invalid data structure for Excel (1st level of array is worksheet name, and 2nd level of array is worksheet data)';
+				return false;
+			}
 		}
 		// useful variables
 		$fileDir  = pathinfo($filePath, PATHINFO_DIRNAME);
