@@ -712,7 +712,7 @@ class Util {
 		$options['paperSize']   = $options['paperSize'] ?? 'A4';
 		$options['orientation'] = $options['orientation'] ?? 'P';
 		$options['fontFamily']  = $options['fontFamily'] ?? 'Arial';
-		$options['fontWeight']  = $options['fontWeight'] ?? 'B';
+		$options['fontWeight']  = $options['fontWeight'] ?? '';
 		$options['fontSize']    = $options['fontSize'] ?? '16';
 		// load library
 		$path = self::$libPath['pdf'];
@@ -775,7 +775,7 @@ class Util {
 				return false;
 			}
 		} // foreach-paragraph
-$pdf->Cell(40,10,'Hello World!');
+$pdf->Cell(40,10,'Hello World! 中文!!!');
 		// save into file
 		$pdf->Output('F', $result['path']);
 		// done!
