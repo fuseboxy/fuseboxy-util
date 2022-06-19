@@ -686,19 +686,7 @@ class Util {
 				<string name="$filePath" comments="relative path to upload directory" />
 				<array name="$fileData">
 					<structure name="+">
-						<!-- paragraph type -->
-						<string name="type" default="div" value="div|p|h1|h2|h3|h4|h5|h6|small|ol|ul|br|hr|img|pagebreak">
-							[div]       paragraph (without bottom margin)
-							[p]         paragraph (with bottom margin)
-							[h1..h6]    headings in biggest to smallest font size
-							[small]     small text
-							[ol]        order list (1,2,3,4,..)
-							[ul]        unorder list (just bullet)
-							[br]        line-break
-							[hr]        horizontal line
-							[img]       image
-							[pagebreak] page-break
-						</string>
+						<string name="type" default="div" value="div|p|h1|h2|h3|h4|h5|h6|small|ol|ul|br|hr|img|pagebreak" />
 						<!-- value -->
 						<string name="value" oncondition="div|p|h1..h6|small" />
 						<array name="value" oncondition="ol|ul">
@@ -710,13 +698,15 @@ class Util {
 						<boolean name="underline" default="false" />
 						<boolean name="italic" default="false" />
 						<string name="color" value="ffccaa|#ffccaa|.." />
-						<number name="size" optional="yes" oncondition="p|ul|ol" />
+						<number name="size" optional="yes" oncondition="div|p|ul|ol|br" />
 						<!-- alignment -->
-						<string name="align" default="J" value="J|L|C|R" oncondition="p|h1..h6|small|img" />
+						<string name="align" default="J" value="J|L|C|R" oncondition="div|p|h1..h6|small|img" />
 						<!-- options -->
 						<number name="repeat" optional="yes" default="1" oncondition="br" />
 						<number name="height" optional="yes" oncondition="img" />
 						<number name="width" optional="yes" oncondition="img" />
+						<string name="bullet" optional="yes" oncondition="ol|ul" />
+						<number name="indent" optional="yes" />
 						<string name="url" optional="yes" />
 					</structure>
 				</array>
@@ -855,7 +845,7 @@ class Util {
 	/**
 	<fusedoc>
 		<description>
-			render paragraph to PDF
+			render paragraph (without bottom margin) to PDF
 		</description>
 		<io>
 			<in>
@@ -868,6 +858,8 @@ class Util {
 					<boolean name="underline" optional="yes" default="false" />
 					<number name="size" optional="yes" default="~pageOptions[fontSize]~" />
 					<string name="color" optional="yes" />
+					<number name="indent" optional="yes" />
+					<string name="indentText" optional="yes" />
 				</structure>
 				<structure name="$pageOptions">
 					<string name="fontFamily" />
@@ -904,10 +896,14 @@ class Util {
 		if ( $color === false ) return false;
 		// line height (for min cell height)
 		$lineHeight = $item['size'] / 2;
-		// display in specified font size & style
+		// change to specified font size & style
 		$pdf->setFont($pageOptions['fontFamily'], $itemFontStyle, $item['size']);
 		$pdf->setTextColor($color['r'], $color['g'], $color['b']);
-		$pdf->MultiCell($pageWidth, $lineHeight, $item['value'], null, $item['align']);
+		// display indent (when necessary)
+		if ( !empty($item['indent']) ) $pdf->Cell($item['indent'], $lineHeight, $item['indentText'] ?? '', 0);
+		// display content
+		$contentWidth = $pageWidth - ( $item['indent'] ?? 0 );
+		$pdf->MultiCell($contentWidth, $lineHeight, $item['value'], 0, $item['align']);
 		// restore to original settings afterward
 		$pdf->setFont($pageOptions['fontFamily'], $pageOptions['fontStyle'], $pageOptions['fontSize']);
 		$pdf->setTextColor(0, 0, 0);
@@ -1017,10 +1013,8 @@ class Util {
 		<io>
 			<in>
 				<object name="&$pdf" comments="reference" />
-				<structure name="$item">
-				</structure>
-				<structure name="$pageOptions">
-				</structure>
+				<structure name="$item" />
+				<structure name="$pageOptions" />
 			</in>
 			<out>
 				<boolean name="~return~" />
@@ -1045,9 +1039,18 @@ class Util {
 			<in>
 				<object name="&$pdf" comments="reference" />
 				<structure name="$item">
+					<array name="value">
+						<string name="+" />
+					</array>
+					<string name="align" optional="yes" default="J" comments="J|L|C|R" />
+					<boolean name="italic" optional="yes" default="false" />
+					<boolean name="underline" optional="yes" default="false" />
+					<string name="color" optional="yes" />
+					<string name="indent" optional="yes" default="10" />
+					<string name="bullet" optional="yes" default="~chr(149)~|N." />
 				</structure>
-				<structure name="$pageOptions">
-				</structure>
+				<structure name="$pageOptions" />
+				<string name="$listType" value="ol|ul" />
 			</in>
 			<out>
 				<boolean name="~return~" />
@@ -1056,8 +1059,28 @@ class Util {
 	</fusedoc>
 	*/
 	private static function pdf__renderList(&$pdf, $item, $pageOptions, $listType) {
-
-
+		$item['value']  = $item['value']  ?? [];
+		$item['indent'] = $item['indent'] ?? 8;
+		$item['bullet'] = $item['bullet'] ?? ( ( $listType == 'ol' ) ? 'N.' : chr(149) );
+		// go through each item in list
+		$i = 0;
+		foreach ( $item['value'] as $key => $val ) {
+			$i++;
+			// prepare options of list item
+			$listItem = $item;
+			$listItem['value'] = $val;
+			// when non-numeric key
+			// ===> use as bullet text
+			// ===> otherwise, auto-generate bullet text
+			if ( !is_numeric($key) ) $listItem['indentText'] = $key;
+			elseif ( $listType == 'ol' ) $listItem['indentText'] = str_ireplace('N', $i, $item['bullet']);
+			else $listItem['indentText'] = $item['bullet'];
+			// render list item
+			$rendered = self::pdf__renderDiv($pdf, $listItem, $pageOptions);
+			if ( $rendered === false ) return false;
+		}
+		// done!
+		return true;
 	}
 	private static function pdf__renderOL(&$pdf, $item, $pageOptions) { return self::pdf__renderList($pdf, $item, $pageOptions, 'ol'); }
 	private static function pdf__renderUL(&$pdf, $item, $pageOptions) { return self::pdf__renderList($pdf, $item, $pageOptions, 'ul'); }
@@ -1068,7 +1091,7 @@ class Util {
 	/**
 	<fusedoc>
 		<description>
-			render paragraph to PDF
+			render paragraph (with bottom margin) to PDF
 		</description>
 		<io>
 			<in>
@@ -1082,12 +1105,7 @@ class Util {
 					<number name="size" optional="yes" default="~pageOptions[fontSize]~" />
 					<string name="color" optional="yes" />
 				</structure>
-				<structure name="$pageOptions">
-					<number name="fontSize" />
-					<structure name="margin">
-						<number nam="L|R|T" />
-					</structure>
-				</structure>
+				<structure name="$pageOptions" />
 			</in>
 			<out>
 				<boolean name="~return~" />
