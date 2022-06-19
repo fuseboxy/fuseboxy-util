@@ -20,7 +20,7 @@ class Util {
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/OAuth.php',
 		),
 		'md2html' => __DIR__.'/../../lib/parsedown/1.7.4/Parsedown.php',
-		'pdf' => __DIR__.'/../../lib/fpdf/1.84/fpdf.php',
+		'pdf' => __DIR__.'/../../lib/fpdf/1.84/chinese.php',
 		'phpQuery' => __DIR__.'/../../lib/phpquery/2.0.1/phpQuery.php',
 		'xls2array' => array(
 			__DIR__.'/../../lib/simplexls/0.9.5/src/SimpleXLS.php',
@@ -718,7 +718,7 @@ class Util {
 						[A5] 148 x 210
 					</string>
 					<string name="orientation" default="P" value="P|L" />
-					<string name="fontFamily" default="Times" />
+					<string name="fontFamily" default="Times|Big5|GB|.." />
 					<string name="fontStyle" default="" />
 					<string name="fontSize" default="12" />
 					<structure name="margin">
@@ -742,7 +742,7 @@ class Util {
 		// default page options
 		$pageOptions['paperSize']   = $pageOptions['paperSize']   ?? 'A4';
 		$pageOptions['orientation'] = $pageOptions['orientation'] ?? 'P';
-		$pageOptions['fontFamily']  = $pageOptions['fontFamily']  ?? 'Times';
+		$pageOptions['fontFamily']  = $pageOptions['fontFamily']  ?? 'Times';  // use 'Big5' for traditional chinese; use 'GB' for simplified chinese
 		$pageOptions['fontStyle']   = $pageOptions['fontStyle']   ?? '';
 		$pageOptions['fontSize']    = $pageOptions['fontSize']    ?? 12;
 		$pageOptions['margin']      = $pageOptions['margin']      ?? [];
@@ -773,7 +773,10 @@ class Util {
 			return false;
 		}
 		// start!
-		$pdf = new FPDF($pageOptions['orientation'], 'mm', $pageOptions['paperSize']);
+		$pdf = new PDF_Chinese($pageOptions['orientation'], 'mm', $pageOptions['paperSize']);
+		// add font for chinese (when necessary)
+		if     ( $pageOptions['fontFamily'] == 'Big5' ) $pdf->AddBig5Font();
+		elseif ( $pageOptions['fontFamily'] == 'GB'   ) $pdf->AddGBFont();
 		// apply page settings
 		$pdf->SetMargins($pageOptions['margin']['L'], $pageOptions['margin']['T'], $pageOptions['margin']['R']);
 		$pdf->SetFont($pageOptions['fontFamily'], $pageOptions['fontStyle'], $pageOptions['fontSize']);
@@ -792,8 +795,17 @@ class Util {
 			// fix : color & size
 			if ( !isset($item['color']) and isset($item['fontColor']) ) $item['color'] = $item['fontColor'];
 			if ( !isset($item['size'])  and isset($item['fontSize'])  ) $item['size']  = $item['fontSize'];
-			// fix : value
+			// fix : list value
 			if ( isset($item['value']) and is_string($item['value']) and in_array($item['type'], ['ol','ul']) ) $item['value'] = array($item['value']);
+			// fix : encoding (for chinese)
+			if ( isset($item['value']) and in_array($pageOptions['fontFamily'], ['Big5','GB']) ) {
+				$encoding = ( $pageOptions['fontFamily'] == 'Big5' ) ? 'big5' : 'gbk';
+				if ( in_array($item['type'], ['ol','ul']) ) {
+					$item['value'] = array_map(fn($listItem) => iconv('utf-8', $encoding, $listItem), $item['value']);
+				} else {
+					$item['value'] = iconv('utf-8', $encoding, $item['value']);
+				}
+			}
 			// validation
 			$method = "pdf__render{$item['type']}";
 			if ( !method_exists(__CLASS__, $method) ) {
