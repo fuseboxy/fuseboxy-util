@@ -781,7 +781,7 @@ class Util {
 		$pdf->AddPage();
 		foreach ( $fileData as $item ) {
 			// fix : type
-			if ( !isset($item['type']) ) $item['type'] = 'p';
+			if ( !isset($item['type']) ) $item['type'] = 'div';
 			else $item['type'] = strtolower($item['type']);
 			// fix : align
 			if     ( isset($item['align']) and strtolower($item['align']) == 'left'      ) $item['align'] = 'L';
