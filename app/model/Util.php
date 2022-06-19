@@ -1172,7 +1172,7 @@ class Util {
 	</fusedoc>
 	*/
 	private static function pdf__renderSmall(&$pdf, $item, $pageOptions) {
-		$item['size'] = $options['fontSize'] * .8;
+		$item['size'] = $pageOptions['fontSize'] * .8;
 		return self::pdf__renderDiv($pdf, $item, $pageOptions);
 	}
 
