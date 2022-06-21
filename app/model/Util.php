@@ -1059,7 +1059,7 @@ class Util {
 					<boolean name="underline" optional="yes" default="false" />
 					<string name="color" optional="yes" />
 					<string name="indent" optional="yes" default="10" />
-					<string name="bullet" optional="yes" default="~chr(149)~|N." />
+					<string name="bullet" optional="yes" default="~chr(149)~|{n}." />
 				</structure>
 				<structure name="$pageOptions" />
 				<string name="$listType" value="ol|ul" />
@@ -1073,7 +1073,7 @@ class Util {
 	private static function pdf__renderList(&$pdf, $item, $pageOptions, $listType) {
 		$item['value']  = $item['value']  ?? [];
 		$item['indent'] = $item['indent'] ?? 8;
-		$item['bullet'] = $item['bullet'] ?? ( ( $listType == 'ol' ) ? 'N.' : chr(149) );
+		$item['bullet'] = $item['bullet'] ?? ( ( $listType == 'ol' ) ? '{n}.' : chr(149) );
 		// go through each item in list
 		$i = 0;
 		foreach ( $item['value'] as $key => $val ) {
@@ -1085,7 +1085,7 @@ class Util {
 			// ===> use as bullet text
 			// ===> otherwise, auto-generate bullet text
 			if ( !is_numeric($key) ) $listItem['indentText'] = $key;
-			elseif ( $listType == 'ol' ) $listItem['indentText'] = str_ireplace('N', $i, $item['bullet']);
+			elseif ( $listType == 'ol' ) $listItem['indentText'] = str_replace('{n}', $i, $item['bullet']);
 			else $listItem['indentText'] = $item['bullet'];
 			// render list item
 			$rendered = self::pdf__renderDiv($pdf, $listItem, $pageOptions);
