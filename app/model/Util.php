@@ -85,7 +85,7 @@ class Util {
 		$startTime = microtime(true);
 		// validate library
 		foreach ( self::$libPath['array2xls'] as $libClass ) {
-			if ( !class_exists($path) ) {
+			if ( !class_exists($libClass) ) {
 				self::$error = "PhpSpreadsheet library is missing ({$libClass})";
 				return false;
 			}
