@@ -935,7 +935,7 @@ class Util {
 			<in>
 				<object name="&$pdf" comments="reference" />
 				<structure name="$item">
-					<string name="src" />
+					<string name="src|value" />
 					<string name="align" optional="yes" comments="L|C|R" />
 					<number name="width" optional="yes" />
 					<number name="height" optional="yes" />
@@ -963,7 +963,7 @@ class Util {
 		elseif ( $item['align'] == 'R'  ) $left = $pageWidth - $width + $pageOptions['margin']['L'];
 		else $left = null;
 		// display
-		$pdf->Image($item['src'], $left, null, $width, $height);
+		$pdf->Image($item['src'] ?? $item['value'], $left, null, $width, $height);
 		// done!
 		return true;
 	}
