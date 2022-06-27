@@ -86,7 +86,7 @@ class Util {
 		// validate library
 		foreach ( self::$libPath['array2xls'] as $libClass ) {
 			if ( !class_exists($libClass) ) {
-				self::$error = "PhpSpreadsheet library is missing ({$libClass})";
+				self::$error = "PhpSpreadsheet library is missing ({$libClass})<br />Please use <em>composer</em> to install <strong>phpoffice/phpspreadsheet</strong> into your project";
 				return false;
 			}
 		}
