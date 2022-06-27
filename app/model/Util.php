@@ -13,6 +13,7 @@ class Util {
 			__DIR__.'/../../lib/markdownify/2.3.1/src/Converter.php',
 			__DIR__.'/../../lib/markdownify/2.3.1/src/ConverterExtra.php',
 		),
+		'html2pdf' => 'Mpdf\Mpdf',
 		'mail' => array(
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/PHPMailer.php',
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/Exception.php',
@@ -20,7 +21,7 @@ class Util {
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/OAuth.php',
 		),
 		'md2html' => __DIR__.'/../../lib/parsedown/1.7.4/Parsedown.php',
-		'pdf' => __DIR__.'/../../lib/fpdf/1.84/chinese.php',
+'pdf' => __DIR__.'/../../lib/fpdf/1.84/chinese.php',
 		'phpQuery' => __DIR__.'/../../lib/phpquery/2.0.1/phpQuery.php',
 		'xls2array' => array(
 			__DIR__.'/../../lib/simplexls/0.9.5/src/SimpleXLS.php',
@@ -382,6 +383,98 @@ class Util {
 	/**
 	<fusedoc>
 		<description>
+			convert html to PDF file
+		</description>
+		<io>
+			<in>
+				<!-- config -->
+				<structure name="config" scope="$fusebox">
+					<string name="uploadDir" />
+					<string name="uploadUrl" />
+				</structure>
+				<!-- parameters -->
+				<string name="$html" />
+				<string name="$filePath" optional="yes" comments="relative path to upload directory" />
+				<!-- page options -->
+				<structure name="$options" optional="yes">
+					<string name="paperSize" default="A4" value="A3|A4|A5|~array(width,height)~">
+						[A3] 297 x 420
+						[A4] 210 x 297
+						[A5] 148 x 210
+					</string>
+					<string name="orientation" default="P" value="P|L" />
+					<string name="fontFamily" default="Times" />
+					<string name="fontStyle" default="" />
+					<string name="fontSize" default="12" />
+					<structure name="margin">
+						<number name="L|R|T" default="10" comments="1cm" />
+					</structure>
+				</structure>
+			</in>
+			<out>
+				<!-- file output -->
+				<file name="~uploadDir~/~filePath~" optional="yes" oncondition="when {filePath} specified" />
+				<!-- return value -->
+				<structure name="~return~" optional="yes" oncondition="when {filePath} specified">
+					<string name="path" />
+					<string name="url" />
+				</structure>
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function html2pdf($html, $filePath=null, $options=[]) {
+		// default page options
+		$pageOptions['paperSize']   = $pageOptions['paperSize']   ?? 'A4';
+		$pageOptions['orientation'] = $pageOptions['orientation'] ?? 'P';
+		$pageOptions['fontFamily']  = $pageOptions['fontFamily']  ?? 'Times';
+		$pageOptions['fontStyle']   = $pageOptions['fontStyle']   ?? '';
+		$pageOptions['fontSize']    = $pageOptions['fontSize']    ?? 12;
+		$pageOptions['margin']      = $pageOptions['margin']      ?? [];
+		$pageOptions['margin']['L'] = $pageOptions['margin']['L'] ?? 10;
+		$pageOptions['margin']['R'] = $pageOptions['margin']['R'] ?? 10;
+		$pageOptions['margin']['T'] = $pageOptions['margin']['T'] ?? 10;
+		// validate library
+		$libClass = self::$libPath['html2pdf'];
+		if ( !class_exists($libClass) ) {
+			self::$error = "mPDF library is missing ({$libClass})<br />Please use <em>composer</em> to install <strong>mpdf/mpdf</strong> into your project";
+			return false;
+		}
+		// unify directory separator
+		$filePath  = str_ireplace('\\', '/', $filePath);
+		$uploadDir = str_ireplace('\\', '/', F::config('uploadDir'));
+		$uploadUrl = str_ireplace('\\', '/', F::config('uploadUrl'));
+		// determine output location
+		$result = array(
+			'path' => $uploadDir.( ( substr($uploadDir, -1) != '/' ) ? '/' : '' ).$filePath,
+			'url'  => $uploadUrl.( ( substr($uploadUrl, -1) != '/' ) ? '/' : '' ).$filePath,
+		);
+		// create directory (when necessary)
+		$dir2create = dirname($result['path']);
+		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
+			$err = error_get_last();
+			self::$error = $err['message'];
+			return false;
+		}
+		// start!
+
+
+
+
+		// view pdf directly (when necessary)
+		if ( empty($filePath) ) $pdf->Output();
+		// save into file
+		$pdf->Output($result['path']);
+		// done!
+		return $result;
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
 			send http-request and get response body
 		</description>
 		<io>
@@ -506,18 +599,10 @@ class Util {
 	/**
 	<fusedoc>
 		<description>
-			send email
-			===> require PHPMailer library
-			===> https://github.com/PHPMailer/PHPMailer
+			send email by PHPMailer
 		</description>
 		<io>
 			<in>
-				<!-- library -->
-				<structure name="$libPath" scope="self">
-					<array name="mail">
-						<path name="+" />
-					</array>
-				</structure>
 				<!-- config -->
 				<structure name="config" scope="$fusebox">
 					<structure name="smtp" optional="yes">
