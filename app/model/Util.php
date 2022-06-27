@@ -4,7 +4,7 @@ class Util {
 
 	// properties : library for corresponding methods
 	public static $libPath = array(
-		'array2pdf' => __DIR__.'/../../lib/fpdf/1.84/chinese.php',
+		'array2pdf' => 'Mpdf\Mpdf',
 		'array2xls' => array(
 			'PhpOffice\PhpSpreadsheet\Spreadsheet',
 			'PhpOffice\PhpSpreadsheet\Writer\Xlsx',
@@ -118,13 +118,12 @@ class Util {
 		$pageOptions['margin']['L'] = $pageOptions['margin']['L'] ?? 10;
 		$pageOptions['margin']['R'] = $pageOptions['margin']['R'] ?? 10;
 		$pageOptions['margin']['T'] = $pageOptions['margin']['T'] ?? 10;
-		// load library
-		$path = self::$libPath['pdf'];
-		if ( !is_file($path) ) {
-			self::$error = "FPDF library is missing ({$path})";
+		// validate library
+		$libClass = self::$libPath['html2pdf'];
+		if ( !class_exists($libClass) ) {
+			self::$error = "mPDF library is missing ({$libClass})<br />Please use <em>composer</em> to install <strong>mpdf/mpdf</strong> into your project";
 			return false;
 		}
-		require_once($path);
 		// unify directory separator
 		$filePath  = str_ireplace('\\', '/', $filePath);
 		$uploadDir = str_ireplace('\\', '/', F::config('uploadDir'));
@@ -142,15 +141,10 @@ class Util {
 			return false;
 		}
 		// start!
-		$pdf = new PDF_Chinese($pageOptions['orientation'], 'mm', $pageOptions['paperSize']);
-		// add font for chinese (when necessary)
-		if     ( $pageOptions['fontFamily'] == 'Big5' ) $pdf->AddBig5Font();
-		elseif ( $pageOptions['fontFamily'] == 'GB'   ) $pdf->AddGBFont();
-		// apply page settings
-		$pdf->SetMargins($pageOptions['margin']['L'], $pageOptions['margin']['T'], $pageOptions['margin']['R']);
+		$pdf = new Mpdf\Mpdf([ 'mode' => 'utf-8', 'format' => $pageOptions['paperSize'] ]);
 		$pdf->SetFont($pageOptions['fontFamily'], $pageOptions['fontStyle'], $pageOptions['fontSize']);
+		if ( self::array2pdf__newBlankPage($pdf, $pageOptions) === false ) return false;
 		// go through each item
-		$pdf->AddPage();
 		foreach ( $fileData as $item ) {
 			// fix : type
 			if ( !isset($item['type']) ) $item['type'] = 'div';
@@ -166,17 +160,8 @@ class Util {
 			if ( !isset($item['size'])  and isset($item['fontSize'])  ) $item['size']  = $item['fontSize'];
 			// fix : list value
 			if ( isset($item['value']) and is_string($item['value']) and in_array($item['type'], ['ol','ul']) ) $item['value'] = array($item['value']);
-			// fix : encoding (for chinese)
-			if ( isset($item['value']) and in_array($pageOptions['fontFamily'], ['Big5','GB']) ) {
-				$encoding = ( $pageOptions['fontFamily'] == 'Big5' ) ? 'big5' : 'gbk';
-				if ( in_array($item['type'], ['ol','ul']) ) {
-					$item['value'] = array_map(fn($listItem) => iconv('utf-8', $encoding, $listItem), $item['value']);
-				} else {
-					$item['value'] = iconv('utf-8', $encoding, $item['value']);
-				}
-			}
 			// validation
-			$method = "pdf__render{$item['type']}";
+			$method = "array2pdf__render{$item['type']}";
 			if ( !method_exists(__CLASS__, $method) ) {
 				self::$error = 'Unknown type ('.$item['type'].')';
 				return false;
@@ -185,10 +170,36 @@ class Util {
 			$itemResult = self::$method($pdf, $item, $pageOptions);
 			if ( $itemResult === false ) return false;
 		}
+		// view as PDF directly (when file path not specified)
+		if ( empty($filePath) ) die( $pdf->Output() );
 		// save into file
-		$pdf->Output('F', $result['path']);
+		$pdf->Output($result['path']);
 		// done!
 		return $result;
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			start a new blank page
+		</description>
+		<io>
+			<in>
+				<object name="&$pdf" comments="reference" />
+				<structure name="$pageOptions" />
+			</in>
+			<out>
+				<boolean name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function array2pdf__newBlankPage(&$pdf, $pageOptions) {
+		$pdf->AddPage($pageOptions['orientation'], null, null, null, null, $pageOptions['margin']['L'], $pageOptions['margin']['R']);
+		return true;
 	}
 
 
@@ -217,7 +228,7 @@ class Util {
 	private static function array2pdf__renderBR(&$pdf, $item, $pageOptions) {
 		$item['repeat'] = $item['repeat'] ?? 1;
 		$item['value'] = str_repeat(PHP_EOL, $item['repeat']);
-		return self::pdf__renderDiv($pdf, $item, $pageOptions);
+		return self::array2pdf__renderDiv($pdf, $item, $pageOptions);
 	}
 
 
@@ -258,15 +269,14 @@ class Util {
 	</fusedoc>
 	*/
 	private static function array2pdf__renderDiv(&$pdf, $item, $pageOptions) {
-		$pageWidth = ( $pdf->GetPageWidth() - $pageOptions['margin']['L'] - $pageOptions['margin']['R'] );
 		// default
 		$item['value']     = $item['value']     ?? '';
 		$item['size']      = $item['size']      ?? $pageOptions['fontSize'];
-		$item['align']     = $item['align']     ?? 'J';
+		$item['align']     = $item['align']     ?? '';
 		$item['bold']      = $item['bold']      ?? ( stripos($pageOptions['fontStyle'], 'B') !== false );
 		$item['italic']    = $item['italic']    ?? ( stripos($pageOptions['fontStyle'], 'I') !== false );
 		$item['underline'] = $item['underline'] ?? ( stripos($pageOptions['fontStyle'], 'U') !== false );
-		$item['color']     = $item['color']     ?? '000000';
+		$item['color']     = $item['color']     ?? '#000000';
 		// font style of item
 		$itemFontStyle = '';
 		if ( $item['bold']      ) $itemFontStyle .= 'B';
@@ -275,16 +285,16 @@ class Util {
 		// font color in RGB
 		$color = self::hex2rgb($item['color']);
 		if ( $color === false ) return false;
-		// line height (for min cell height)
-		$lineHeight = $item['size'] / 2;
+		// min cell height
+		$contentHeight = $item['size'] / 2;
 		// change to specified font size & style
 		$pdf->setFont($pageOptions['fontFamily'], $itemFontStyle, $item['size']);
 		$pdf->setTextColor($color['r'], $color['g'], $color['b']);
 		// display indent (when necessary)
-		if ( !empty($item['indent']) ) $pdf->Cell($item['indent'], $lineHeight, $item['indentText'] ?? '', 0);
+		if ( !empty($item['indent']) ) $pdf->Cell($item['indent'], $contentHeight, $item['indentText'] ?? '', 0);
 		// display content
-		$contentWidth = $pageWidth - ( $item['indent'] ?? 0 );
-		$pdf->MultiCell($contentWidth, $lineHeight, $item['value'], 0, $item['align']);
+		$contentWidth = $pdf->pgwidth - ( $item['indent'] ?? 0 );
+		$pdf->MultiCell($contentWidth, $contentHeight, $item['value'], 0, $item['align']);
 		// restore to original settings afterward
 		$pdf->setFont($pageOptions['fontFamily'], $pageOptions['fontStyle'], $pageOptions['fontSize']);
 		$pdf->setTextColor(0, 0, 0);
@@ -322,21 +332,19 @@ class Util {
 	</fusedoc>
 	*/
 	private static function array2pdf__renderImg(&$pdf, $item, $pageOptions) {
-		$pageWidth = ( $pdf->GetPageWidth() - $pageOptions['margin']['L'] - $pageOptions['margin']['R'] );
 		// calculate dimension
-		$width  = $item['width']  ?? $pageWidth;
-		$height = $item['height'] ?? null;
-		// calculate position
-		if     ( !isset($item['align']) ) $left = null;
-		elseif ( $item['align'] == 'C'  ) $left = ($pageWidth/2) - ($width/2) + $pageOptions['margin']['L'];
-		elseif ( $item['align'] == 'R'  ) $left = $pageWidth - $width + $pageOptions['margin']['L'];
-		else $left = null;
+		$imgWidth = $item['width'] ?? $pdf->pgwidth;
+		$imgHeight = $item['height'] ?? null;
+		// calculate left position
+		if     ( isset($item['align']) and $item['align'] == 'C'  ) $left = ($pdf->pgwidth/2) - ($imgWidth/2);
+		elseif ( isset($item['align']) and $item['align'] == 'R'  ) $left = $pdf->pgwidth - $imgWidth;
+		else $left = $pageOptions['margin']['L'];
 		// display
-		$pdf->Image($item['src'] ?? $item['value'], $left, null, $width, $height);
+		$pdf->Image($item['src'] ?? $item['value'], $left, $pdf->y, $imgWidth, $imgHeight);
 		// done!
 		return true;
 	}
-	private static function array2pdf__renderImage(&$pdf, $item, $pageOptions) { return self::pdf__renderImg($pdf, $item, $pageOptions); }
+	private static function array2pdf__renderImage(&$pdf, $item, $pageOptions) { return self::array2pdf__renderImg($pdf, $item, $pageOptions); }
 
 
 
@@ -374,14 +382,14 @@ class Util {
 		if ( $hSize == 'h3' ) $item['size'] = $pageOptions['fontSize'] * 1.17;
 		if ( $hSize == 'h5' ) $item['size'] = $pageOptions['fontSize'] * .83;
 		if ( $hSize == 'h6' ) $item['size'] = $pageOptions['fontSize'] * .67;
-		return self::pdf__renderDiv($pdf, $item, $pageOptions);
+		return self::array2pdf__renderDiv($pdf, $item, $pageOptions);
 	}
-	private static function array2pdf__renderH1(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h1'); }
-	private static function array2pdf__renderH2(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h2'); }
-	private static function array2pdf__renderH3(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h3'); }
-	private static function array2pdf__renderH4(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h4'); }
-	private static function array2pdf__renderH5(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h5'); }
-	private static function array2pdf__renderH6(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h6'); }
+	private static function array2pdf__renderH1(&$pdf, $item, $pageOptions) { return self::array2pdf__renderHeading($pdf, $item, $pageOptions, 'h1'); }
+	private static function array2pdf__renderH2(&$pdf, $item, $pageOptions) { return self::array2pdf__renderHeading($pdf, $item, $pageOptions, 'h2'); }
+	private static function array2pdf__renderH3(&$pdf, $item, $pageOptions) { return self::array2pdf__renderHeading($pdf, $item, $pageOptions, 'h3'); }
+	private static function array2pdf__renderH4(&$pdf, $item, $pageOptions) { return self::array2pdf__renderHeading($pdf, $item, $pageOptions, 'h4'); }
+	private static function array2pdf__renderH5(&$pdf, $item, $pageOptions) { return self::array2pdf__renderHeading($pdf, $item, $pageOptions, 'h5'); }
+	private static function array2pdf__renderH6(&$pdf, $item, $pageOptions) { return self::array2pdf__renderHeading($pdf, $item, $pageOptions, 'h6'); }
 
 
 
@@ -457,14 +465,14 @@ class Util {
 			elseif ( $listType == 'ol' ) $listItem['indentText'] = str_replace('{n}', $i, $item['bullet']);
 			else $listItem['indentText'] = $item['bullet'];
 			// render list item
-			$rendered = self::pdf__renderDiv($pdf, $listItem, $pageOptions);
+			$rendered = self::array2pdf__renderDiv($pdf, $listItem, $pageOptions);
 			if ( $rendered === false ) return false;
 		}
 		// done!
 		return true;
 	}
-	private static function array2pdf__renderOL(&$pdf, $item, $pageOptions) { return self::pdf__renderList($pdf, $item, $pageOptions, 'ol'); }
-	private static function array2pdf__renderUL(&$pdf, $item, $pageOptions) { return self::pdf__renderList($pdf, $item, $pageOptions, 'ul'); }
+	private static function array2pdf__renderOL(&$pdf, $item, $pageOptions) { return self::array2pdf__renderList($pdf, $item, $pageOptions, 'ol'); }
+	private static function array2pdf__renderUL(&$pdf, $item, $pageOptions) { return self::array2pdf__renderList($pdf, $item, $pageOptions, 'ul'); }
 
 
 
@@ -495,7 +503,7 @@ class Util {
 	</fusedoc>
 	*/
 	private static function array2pdf__renderP(&$pdf, $item, $pageOptions) {
-		return ( self::pdf__renderDiv($pdf, $item, $pageOptions) and self::pdf__renderBR($pdf, $item, $pageOptions) );
+		return ( self::array2pdf__renderDiv($pdf, $item, $pageOptions) and self::array2pdf__renderBR($pdf, $item, $pageOptions) );
 	}
 
 
@@ -519,8 +527,7 @@ class Util {
 	</fusedoc>
 	*/
 	private static function array2pdf__renderPageBreak(&$pdf, $item, $pageOptions) {
-		$pdf->AddPage();
-		return true;
+		return self::array2pdf__newBlankPage($pdf, $pageOptions);
 	}
 
 
@@ -554,7 +561,7 @@ class Util {
 	*/
 	private static function array2pdf__renderSmall(&$pdf, $item, $pageOptions) {
 		$item['size'] = $pageOptions['fontSize'] * .8;
-		return self::pdf__renderDiv($pdf, $item, $pageOptions);
+		return self::array2pdf__renderDiv($pdf, $item, $pageOptions);
 	}
 
 
@@ -946,6 +953,7 @@ class Util {
 	*/
 	public static function html2pdf($html, $filePath=null, $options=[]) {
 		// default page options
+/*
 		$pageOptions['paperSize']   = $pageOptions['paperSize']   ?? 'A4';
 		$pageOptions['orientation'] = $pageOptions['orientation'] ?? 'P';
 		$pageOptions['fontFamily']  = $pageOptions['fontFamily']  ?? 'Times';
@@ -955,6 +963,7 @@ class Util {
 		$pageOptions['margin']['L'] = $pageOptions['margin']['L'] ?? 10;
 		$pageOptions['margin']['R'] = $pageOptions['margin']['R'] ?? 10;
 		$pageOptions['margin']['T'] = $pageOptions['margin']['T'] ?? 10;
+*/
 		// validate library
 		$libClass = self::$libPath['html2pdf'];
 		if ( !class_exists($libClass) ) {
@@ -984,8 +993,8 @@ class Util {
 		$pdf->autoScriptToLang = true;
 		// write output to file
 		$pdf->WriteHTML($html);
-		// view as PDF directly (when {filePath} not specified)
-		if ( empty($filePath) ) $pdf->Output();
+		// view as PDF directly (when file path not specified)
+		if ( empty($filePath) ) die( $pdf->Output() );
 		// save into file
 		$pdf->Output($result['path']);
 		// done!
