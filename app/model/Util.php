@@ -457,11 +457,13 @@ class Util {
 			return false;
 		}
 		// start!
-
-
-
-
-		// view pdf directly (when necessary)
+		$pdf = new Mpdf\Mpdf();
+		// magic config for CKJ characters
+		$pdf->autoLangToFont = true;
+		$pdf->autoScriptToLang = true;
+		// write output to file
+		$pdf->WriteHTML($html);
+		// view as PDF directly (when {filePath} not specified)
 		if ( empty($filePath) ) $pdf->Output();
 		// save into file
 		$pdf->Output($result['path']);
