@@ -4,6 +4,7 @@ class Util {
 
 	// properties : library for corresponding methods
 	public static $libPath = array(
+		'array2pdf' => __DIR__.'/../../lib/fpdf/1.84/chinese.php',
 		'array2xls' => array(
 			'PhpOffice\PhpSpreadsheet\Spreadsheet',
 			'PhpOffice\PhpSpreadsheet\Writer\Xlsx',
@@ -21,7 +22,6 @@ class Util {
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/OAuth.php',
 		),
 		'md2html' => __DIR__.'/../../lib/parsedown/1.7.4/Parsedown.php',
-'pdf' => __DIR__.'/../../lib/fpdf/1.84/chinese.php',
 		'phpQuery' => __DIR__.'/../../lib/phpquery/2.0.1/phpQuery.php',
 		'xls2array' => array(
 			__DIR__.'/../../lib/simplexls/0.9.5/src/SimpleXLS.php',
@@ -35,6 +35,527 @@ class Util {
 	// get (latest) error message
 	private static $error;
 	public static function error() { return self::$error; }
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			generate PDF file with provided data
+		</description>
+		<io>
+			<in>
+				<!-- config -->
+				<structure name="config" scope="$fusebox">
+					<string name="uploadDir" />
+					<string name="uploadUrl" />
+				</structure>
+				<!-- parameters -->
+				<string name="$filePath" comments="relative path to upload directory" />
+				<array name="$fileData">
+					<structure name="+">
+						<string name="type" default="div" value="div|p|h1|h2|h3|h4|h5|h6|small|ol|ul|br|hr|img|pagebreak" />
+						<!-- value -->
+						<string name="value" oncondition="div|p|h1..h6|small" />
+						<array name="value" oncondition="ol|ul">
+							<string name="+" />
+						</array>
+						<string name="src" oncondition="img" />
+						<!-- styling -->
+						<boolean name="bold" default="false" />
+						<boolean name="underline" default="false" />
+						<boolean name="italic" default="false" />
+						<string name="color" value="ffccaa|#ffccaa|.." />
+						<number name="size" optional="yes" oncondition="div|p|ul|ol|br" />
+						<!-- alignment -->
+						<string name="align" default="J" value="J|L|C|R" oncondition="div|p|h1..h6|small|img" />
+						<!-- options -->
+						<number name="repeat" optional="yes" default="1" oncondition="br" />
+						<number name="height" optional="yes" oncondition="img" />
+						<number name="width" optional="yes" oncondition="img" />
+						<string name="bullet" optional="yes" oncondition="ol|ul" />
+						<number name="indent" optional="yes" />
+						<string name="url" optional="yes" />
+					</structure>
+				</array>
+				<!-- page options -->
+				<structure name="$options">
+					<string name="paperSize" default="A4" value="A3|A4|A5|~array(width,height)~">
+						[A3] 297 x 420
+						[A4] 210 x 297
+						[A5] 148 x 210
+					</string>
+					<string name="orientation" default="P" value="P|L" />
+					<string name="fontFamily" default="Times|Big5|GB|.." />
+					<string name="fontStyle" default="" />
+					<string name="fontSize" default="12" />
+					<structure name="margin">
+						<number name="L|R|T" default="10" comments="1cm" />
+					</structure>
+				</structure>
+			</in>
+			<out>
+				<!-- file output -->
+				<file name="~uploadDir~/~filePath~" optional="yes" oncondition="when {filePath} specified" />
+				<!-- return value -->
+				<structure name="~return~" optional="yes" oncondition="when {filePath} specified">
+					<string name="path" />
+					<string name="url" />
+				</structure>
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function array2pdf($filePath, $fileData, $pageOptions=[]) {
+		// default page options
+		$pageOptions['paperSize']   = $pageOptions['paperSize']   ?? 'A4';
+		$pageOptions['orientation'] = $pageOptions['orientation'] ?? 'P';
+		$pageOptions['fontFamily']  = $pageOptions['fontFamily']  ?? 'Times';  // use 'Big5' for traditional chinese; use 'GB' for simplified chinese
+		$pageOptions['fontStyle']   = $pageOptions['fontStyle']   ?? '';
+		$pageOptions['fontSize']    = $pageOptions['fontSize']    ?? 12;
+		$pageOptions['margin']      = $pageOptions['margin']      ?? [];
+		$pageOptions['margin']['L'] = $pageOptions['margin']['L'] ?? 10;
+		$pageOptions['margin']['R'] = $pageOptions['margin']['R'] ?? 10;
+		$pageOptions['margin']['T'] = $pageOptions['margin']['T'] ?? 10;
+		// load library
+		$path = self::$libPath['pdf'];
+		if ( !is_file($path) ) {
+			self::$error = "FPDF library is missing ({$path})";
+			return false;
+		}
+		require_once($path);
+		// unify directory separator
+		$filePath  = str_ireplace('\\', '/', $filePath);
+		$uploadDir = str_ireplace('\\', '/', F::config('uploadDir'));
+		$uploadUrl = str_ireplace('\\', '/', F::config('uploadUrl'));
+		// determine output location
+		$result = array(
+			'path' => $uploadDir.( ( substr($uploadDir, -1) != '/' ) ? '/' : '' ).$filePath,
+			'url'  => $uploadUrl.( ( substr($uploadUrl, -1) != '/' ) ? '/' : '' ).$filePath,
+		);
+		// create directory (when necessary)
+		$dir2create = dirname($result['path']);
+		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
+			$err = error_get_last();
+			self::$error = $err['message'];
+			return false;
+		}
+		// start!
+		$pdf = new PDF_Chinese($pageOptions['orientation'], 'mm', $pageOptions['paperSize']);
+		// add font for chinese (when necessary)
+		if     ( $pageOptions['fontFamily'] == 'Big5' ) $pdf->AddBig5Font();
+		elseif ( $pageOptions['fontFamily'] == 'GB'   ) $pdf->AddGBFont();
+		// apply page settings
+		$pdf->SetMargins($pageOptions['margin']['L'], $pageOptions['margin']['T'], $pageOptions['margin']['R']);
+		$pdf->SetFont($pageOptions['fontFamily'], $pageOptions['fontStyle'], $pageOptions['fontSize']);
+		// go through each item
+		$pdf->AddPage();
+		foreach ( $fileData as $item ) {
+			// fix : type
+			if ( !isset($item['type']) ) $item['type'] = 'div';
+			else $item['type'] = strtolower($item['type']);
+			// fix : align
+			if     ( isset($item['align']) and strtolower($item['align']) == 'left'      ) $item['align'] = 'L';
+			elseif ( isset($item['align']) and strtolower($item['align']) == 'right'     ) $item['align'] = 'R';
+			elseif ( isset($item['align']) and strtolower($item['align']) == 'center'    ) $item['align'] = 'C';
+			elseif ( isset($item['align']) and strtolower($item['align']) == 'justified' ) $item['align'] = 'J';
+			elseif ( isset($item['align']) ) $item['align'] = strtoupper($item['align']);
+			// fix : color & size
+			if ( !isset($item['color']) and isset($item['fontColor']) ) $item['color'] = $item['fontColor'];
+			if ( !isset($item['size'])  and isset($item['fontSize'])  ) $item['size']  = $item['fontSize'];
+			// fix : list value
+			if ( isset($item['value']) and is_string($item['value']) and in_array($item['type'], ['ol','ul']) ) $item['value'] = array($item['value']);
+			// fix : encoding (for chinese)
+			if ( isset($item['value']) and in_array($pageOptions['fontFamily'], ['Big5','GB']) ) {
+				$encoding = ( $pageOptions['fontFamily'] == 'Big5' ) ? 'big5' : 'gbk';
+				if ( in_array($item['type'], ['ol','ul']) ) {
+					$item['value'] = array_map(fn($listItem) => iconv('utf-8', $encoding, $listItem), $item['value']);
+				} else {
+					$item['value'] = iconv('utf-8', $encoding, $item['value']);
+				}
+			}
+			// validation
+			$method = "pdf__render{$item['type']}";
+			if ( !method_exists(__CLASS__, $method) ) {
+				self::$error = 'Unknown type ('.$item['type'].')';
+				return false;
+			}
+			// render item as corresponding type
+			$itemResult = self::$method($pdf, $item, $pageOptions);
+			if ( $itemResult === false ) return false;
+		}
+		// save into file
+		$pdf->Output('F', $result['path']);
+		// done!
+		return $result;
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			render line break to PDF
+		</description>
+		<io>
+			<in>
+				<object name="&$pdf" comments="reference" />
+				<structure name="$item">
+					<number name="repeat" optional="yes" default="1" />
+					<number name="size" optional="yes" />
+				</structure>
+				<structure name="$pageOptions" />
+			</in>
+			<out>
+				<boolean name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	private static function array2pdf__renderBR(&$pdf, $item, $pageOptions) {
+		$item['repeat'] = $item['repeat'] ?? 1;
+		$item['value'] = str_repeat(PHP_EOL, $item['repeat']);
+		return self::pdf__renderDiv($pdf, $item, $pageOptions);
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			render paragraph (without bottom margin) to PDF
+		</description>
+		<io>
+			<in>
+				<object name="&$pdf" comments="reference" />
+				<structure name="$item">
+					<string name="value" />
+					<string name="align" optional="yes" default="J" comments="J|L|C|R" />
+					<boolean name="bold" optional="yes" default="false" />
+					<boolean name="italic" optional="yes" default="false" />
+					<boolean name="underline" optional="yes" default="false" />
+					<number name="size" optional="yes" default="~pageOptions[fontSize]~" />
+					<string name="color" optional="yes" />
+					<number name="indent" optional="yes" />
+					<string name="indentText" optional="yes" />
+				</structure>
+				<structure name="$pageOptions">
+					<string name="fontFamily" />
+					<string name="fontStyle" />
+					<number name="fontSize" />
+					<structure name="margin">
+						<number nam="L|R|T" />
+					</structure>
+				</structure>
+			</in>
+			<out>
+				<boolean name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	private static function array2pdf__renderDiv(&$pdf, $item, $pageOptions) {
+		$pageWidth = ( $pdf->GetPageWidth() - $pageOptions['margin']['L'] - $pageOptions['margin']['R'] );
+		// default
+		$item['value']     = $item['value']     ?? '';
+		$item['size']      = $item['size']      ?? $pageOptions['fontSize'];
+		$item['align']     = $item['align']     ?? 'J';
+		$item['bold']      = $item['bold']      ?? ( stripos($pageOptions['fontStyle'], 'B') !== false );
+		$item['italic']    = $item['italic']    ?? ( stripos($pageOptions['fontStyle'], 'I') !== false );
+		$item['underline'] = $item['underline'] ?? ( stripos($pageOptions['fontStyle'], 'U') !== false );
+		$item['color']     = $item['color']     ?? '000000';
+		// font style of item
+		$itemFontStyle = '';
+		if ( $item['bold']      ) $itemFontStyle .= 'B';
+		if ( $item['italic']    ) $itemFontStyle .= 'I';
+		if ( $item['underline'] ) $itemFontStyle .= 'U';
+		// font color in RGB
+		$color = self::hex2rgb($item['color']);
+		if ( $color === false ) return false;
+		// line height (for min cell height)
+		$lineHeight = $item['size'] / 2;
+		// change to specified font size & style
+		$pdf->setFont($pageOptions['fontFamily'], $itemFontStyle, $item['size']);
+		$pdf->setTextColor($color['r'], $color['g'], $color['b']);
+		// display indent (when necessary)
+		if ( !empty($item['indent']) ) $pdf->Cell($item['indent'], $lineHeight, $item['indentText'] ?? '', 0);
+		// display content
+		$contentWidth = $pageWidth - ( $item['indent'] ?? 0 );
+		$pdf->MultiCell($contentWidth, $lineHeight, $item['value'], 0, $item['align']);
+		// restore to original settings afterward
+		$pdf->setFont($pageOptions['fontFamily'], $pageOptions['fontStyle'], $pageOptions['fontSize']);
+		$pdf->setTextColor(0, 0, 0);
+		// done!
+		return true;
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			render image to PDF
+		</description>
+		<io>
+			<in>
+				<object name="&$pdf" comments="reference" />
+				<structure name="$item">
+					<string name="src|value" />
+					<string name="align" optional="yes" comments="L|C|R" />
+					<number name="width" optional="yes" />
+					<number name="height" optional="yes" />
+				</structure>
+				<structure name="$pageOptions">
+					<structure name="margin">
+						<number name="L|R|T" />
+					</structure>
+				</structure>
+			</in>
+			<out>
+				<boolean name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	private static function array2pdf__renderImg(&$pdf, $item, $pageOptions) {
+		$pageWidth = ( $pdf->GetPageWidth() - $pageOptions['margin']['L'] - $pageOptions['margin']['R'] );
+		// calculate dimension
+		$width  = $item['width']  ?? $pageWidth;
+		$height = $item['height'] ?? null;
+		// calculate position
+		if     ( !isset($item['align']) ) $left = null;
+		elseif ( $item['align'] == 'C'  ) $left = ($pageWidth/2) - ($width/2) + $pageOptions['margin']['L'];
+		elseif ( $item['align'] == 'R'  ) $left = $pageWidth - $width + $pageOptions['margin']['L'];
+		else $left = null;
+		// display
+		$pdf->Image($item['src'] ?? $item['value'], $left, null, $width, $height);
+		// done!
+		return true;
+	}
+	private static function array2pdf__renderImage(&$pdf, $item, $pageOptions) { return self::pdf__renderImg($pdf, $item, $pageOptions); }
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			render heading to PDF
+		</description>
+		<io>
+			<in>
+				<object name="&$pdf" comments="reference" />
+				<structure name="$item">
+					<string name="value" />
+					<string name="align" optional="yes" default="J" comments="J|L|C|R" />
+					<boolean name="italic" optional="yes" default="false" />
+					<boolean name="underline" optional="yes" default="false" />
+					<string name="color" optional="yes" />
+				</structure>
+				<structure name="$pageOptions">
+					<number name="fontSize" />
+				</structure>
+				<string name="$hSize" value="h1|h2|h3|h4|h5|h6" />
+			</in>
+			<out>
+				<boolean name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	private static function array2pdf__renderHeading(&$pdf, $item, $pageOptions, $hSize) {
+		$item['bold'] = true;
+		if ( $hSize == 'h1' ) $item['size'] = $pageOptions['fontSize'] * 2;
+		if ( $hSize == 'h2' ) $item['size'] = $pageOptions['fontSize'] * 1.5;
+		if ( $hSize == 'h3' ) $item['size'] = $pageOptions['fontSize'] * 1.17;
+		if ( $hSize == 'h5' ) $item['size'] = $pageOptions['fontSize'] * .83;
+		if ( $hSize == 'h6' ) $item['size'] = $pageOptions['fontSize'] * .67;
+		return self::pdf__renderDiv($pdf, $item, $pageOptions);
+	}
+	private static function array2pdf__renderH1(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h1'); }
+	private static function array2pdf__renderH2(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h2'); }
+	private static function array2pdf__renderH3(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h3'); }
+	private static function array2pdf__renderH4(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h4'); }
+	private static function array2pdf__renderH5(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h5'); }
+	private static function array2pdf__renderH6(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h6'); }
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			render horizontal line to PDF
+		</description>
+		<io>
+			<in>
+				<object name="&$pdf" comments="reference" />
+				<structure name="$item" />
+				<structure name="$pageOptions" />
+			</in>
+			<out>
+				<boolean name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	private static function array2pdf__renderHR(&$pdf, $item, $pageOptions) {
+		$pdf->MultiCell(null, 1, null, 'B');
+		return true;
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			render list to PDF
+		</description>
+		<io>
+			<in>
+				<object name="&$pdf" comments="reference" />
+				<structure name="$item">
+					<array name="value">
+						<string name="+" />
+					</array>
+					<string name="align" optional="yes" default="J" comments="J|L|C|R" />
+					<boolean name="italic" optional="yes" default="false" />
+					<boolean name="underline" optional="yes" default="false" />
+					<string name="color" optional="yes" />
+					<string name="indent" optional="yes" default="10" />
+					<string name="bullet" optional="yes" default="~chr(149)~|{n}." />
+				</structure>
+				<structure name="$pageOptions" />
+				<string name="$listType" value="ol|ul" />
+			</in>
+			<out>
+				<boolean name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	private static function array2pdf__renderList(&$pdf, $item, $pageOptions, $listType) {
+		$item['value']  = $item['value']  ?? [];
+		$item['indent'] = $item['indent'] ?? 8;
+		$item['bullet'] = $item['bullet'] ?? ( ( $listType == 'ol' ) ? '{n}.' : chr(149) );
+		// go through each item in list
+		$i = 0;
+		foreach ( $item['value'] as $key => $val ) {
+			$i++;
+			// prepare options of list item
+			$listItem = $item;
+			$listItem['value'] = $val;
+			// when non-numeric key
+			// ===> use as bullet text
+			// ===> otherwise, auto-generate bullet text
+			if ( !is_numeric($key) ) $listItem['indentText'] = $key;
+			elseif ( $listType == 'ol' ) $listItem['indentText'] = str_replace('{n}', $i, $item['bullet']);
+			else $listItem['indentText'] = $item['bullet'];
+			// render list item
+			$rendered = self::pdf__renderDiv($pdf, $listItem, $pageOptions);
+			if ( $rendered === false ) return false;
+		}
+		// done!
+		return true;
+	}
+	private static function array2pdf__renderOL(&$pdf, $item, $pageOptions) { return self::pdf__renderList($pdf, $item, $pageOptions, 'ol'); }
+	private static function array2pdf__renderUL(&$pdf, $item, $pageOptions) { return self::pdf__renderList($pdf, $item, $pageOptions, 'ul'); }
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			render paragraph (with bottom margin) to PDF
+		</description>
+		<io>
+			<in>
+				<object name="&$pdf" comments="reference" />
+				<structure name="$item">
+					<string name="value" />
+					<string name="align" optional="yes" default="J" comments="J|L|C|R" />
+					<boolean name="bold" optional="yes" default="false" />
+					<boolean name="italic" optional="yes" default="false" />
+					<boolean name="underline" optional="yes" default="false" />
+					<number name="size" optional="yes" default="~pageOptions[fontSize]~" />
+					<string name="color" optional="yes" />
+				</structure>
+				<structure name="$pageOptions" />
+			</in>
+			<out>
+				<boolean name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	private static function array2pdf__renderP(&$pdf, $item, $pageOptions) {
+		return ( self::pdf__renderDiv($pdf, $item, $pageOptions) and self::pdf__renderBR($pdf, $item, $pageOptions) );
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			render page break to PDF
+		</description>
+		<io>
+			<in>
+				<object name="&$pdf" comments="reference" />
+				<structure name="$item" />
+				<structure name="$pageOptions" />
+			</in>
+			<out>
+				<boolean name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	private static function array2pdf__renderPageBreak(&$pdf, $item, $pageOptions) {
+		$pdf->AddPage();
+		return true;
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			render small text to PDF
+		</description>
+		<io>
+			<in>
+				<object name="&$pdf" comments="reference" />
+				<structure name="$item">
+					<string name="value" />
+					<string name="align" optional="yes" default="J" comments="J|L|C|R" />
+					<boolean name="bold" optional="yes" default="false" />
+					<boolean name="italic" optional="yes" default="false" />
+					<boolean name="underline" optional="yes" default="false" />
+					<string name="color" optional="yes" />
+				</structure>
+				<structure name="$pageOptions">
+					<number name="fontSize" />
+				</structure>
+			</in>
+			<out>
+				<boolean name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	private static function array2pdf__renderSmall(&$pdf, $item, $pageOptions) {
+		$item['size'] = $pageOptions['fontSize'] * .8;
+		return self::pdf__renderDiv($pdf, $item, $pageOptions);
+	}
 
 
 
@@ -752,527 +1273,6 @@ class Util {
 		// done!
 		$parser = new Parsedown();
 		return $parser->text($md);
-	}
-
-
-
-
-	/**
-	<fusedoc>
-		<description>
-			generate PDF file with provided data
-		</description>
-		<io>
-			<in>
-				<!-- config -->
-				<structure name="config" scope="$fusebox">
-					<string name="uploadDir" />
-					<string name="uploadUrl" />
-				</structure>
-				<!-- parameters -->
-				<string name="$filePath" comments="relative path to upload directory" />
-				<array name="$fileData">
-					<structure name="+">
-						<string name="type" default="div" value="div|p|h1|h2|h3|h4|h5|h6|small|ol|ul|br|hr|img|pagebreak" />
-						<!-- value -->
-						<string name="value" oncondition="div|p|h1..h6|small" />
-						<array name="value" oncondition="ol|ul">
-							<string name="+" />
-						</array>
-						<string name="src" oncondition="img" />
-						<!-- styling -->
-						<boolean name="bold" default="false" />
-						<boolean name="underline" default="false" />
-						<boolean name="italic" default="false" />
-						<string name="color" value="ffccaa|#ffccaa|.." />
-						<number name="size" optional="yes" oncondition="div|p|ul|ol|br" />
-						<!-- alignment -->
-						<string name="align" default="J" value="J|L|C|R" oncondition="div|p|h1..h6|small|img" />
-						<!-- options -->
-						<number name="repeat" optional="yes" default="1" oncondition="br" />
-						<number name="height" optional="yes" oncondition="img" />
-						<number name="width" optional="yes" oncondition="img" />
-						<string name="bullet" optional="yes" oncondition="ol|ul" />
-						<number name="indent" optional="yes" />
-						<string name="url" optional="yes" />
-					</structure>
-				</array>
-				<!-- page options -->
-				<structure name="$options">
-					<string name="paperSize" default="A4" value="A3|A4|A5|~array(width,height)~">
-						[A3] 297 x 420
-						[A4] 210 x 297
-						[A5] 148 x 210
-					</string>
-					<string name="orientation" default="P" value="P|L" />
-					<string name="fontFamily" default="Times|Big5|GB|.." />
-					<string name="fontStyle" default="" />
-					<string name="fontSize" default="12" />
-					<structure name="margin">
-						<number name="L|R|T" default="10" comments="1cm" />
-					</structure>
-				</structure>
-			</in>
-			<out>
-				<!-- file output -->
-				<file name="~uploadDir~/~filePath~" optional="yes" oncondition="when {filePath} specified" />
-				<!-- return value -->
-				<structure name="~return~" optional="yes" oncondition="when {filePath} specified">
-					<string name="path" />
-					<string name="url" />
-				</structure>
-			</out>
-		</io>
-	</fusedoc>
-	*/
-	public static function pdf($filePath, $fileData, $pageOptions=[]) {
-		// default page options
-		$pageOptions['paperSize']   = $pageOptions['paperSize']   ?? 'A4';
-		$pageOptions['orientation'] = $pageOptions['orientation'] ?? 'P';
-		$pageOptions['fontFamily']  = $pageOptions['fontFamily']  ?? 'Times';  // use 'Big5' for traditional chinese; use 'GB' for simplified chinese
-		$pageOptions['fontStyle']   = $pageOptions['fontStyle']   ?? '';
-		$pageOptions['fontSize']    = $pageOptions['fontSize']    ?? 12;
-		$pageOptions['margin']      = $pageOptions['margin']      ?? [];
-		$pageOptions['margin']['L'] = $pageOptions['margin']['L'] ?? 10;
-		$pageOptions['margin']['R'] = $pageOptions['margin']['R'] ?? 10;
-		$pageOptions['margin']['T'] = $pageOptions['margin']['T'] ?? 10;
-		// load library
-		$path = self::$libPath['pdf'];
-		if ( !is_file($path) ) {
-			self::$error = "FPDF library is missing ({$path})";
-			return false;
-		}
-		require_once($path);
-		// unify directory separator
-		$filePath  = str_ireplace('\\', '/', $filePath);
-		$uploadDir = str_ireplace('\\', '/', F::config('uploadDir'));
-		$uploadUrl = str_ireplace('\\', '/', F::config('uploadUrl'));
-		// determine output location
-		$result = array(
-			'path' => $uploadDir.( ( substr($uploadDir, -1) != '/' ) ? '/' : '' ).$filePath,
-			'url'  => $uploadUrl.( ( substr($uploadUrl, -1) != '/' ) ? '/' : '' ).$filePath,
-		);
-		// create directory (when necessary)
-		$dir2create = dirname($result['path']);
-		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
-			$err = error_get_last();
-			self::$error = $err['message'];
-			return false;
-		}
-		// start!
-		$pdf = new PDF_Chinese($pageOptions['orientation'], 'mm', $pageOptions['paperSize']);
-		// add font for chinese (when necessary)
-		if     ( $pageOptions['fontFamily'] == 'Big5' ) $pdf->AddBig5Font();
-		elseif ( $pageOptions['fontFamily'] == 'GB'   ) $pdf->AddGBFont();
-		// apply page settings
-		$pdf->SetMargins($pageOptions['margin']['L'], $pageOptions['margin']['T'], $pageOptions['margin']['R']);
-		$pdf->SetFont($pageOptions['fontFamily'], $pageOptions['fontStyle'], $pageOptions['fontSize']);
-		// go through each item
-		$pdf->AddPage();
-		foreach ( $fileData as $item ) {
-			// fix : type
-			if ( !isset($item['type']) ) $item['type'] = 'div';
-			else $item['type'] = strtolower($item['type']);
-			// fix : align
-			if     ( isset($item['align']) and strtolower($item['align']) == 'left'      ) $item['align'] = 'L';
-			elseif ( isset($item['align']) and strtolower($item['align']) == 'right'     ) $item['align'] = 'R';
-			elseif ( isset($item['align']) and strtolower($item['align']) == 'center'    ) $item['align'] = 'C';
-			elseif ( isset($item['align']) and strtolower($item['align']) == 'justified' ) $item['align'] = 'J';
-			elseif ( isset($item['align']) ) $item['align'] = strtoupper($item['align']);
-			// fix : color & size
-			if ( !isset($item['color']) and isset($item['fontColor']) ) $item['color'] = $item['fontColor'];
-			if ( !isset($item['size'])  and isset($item['fontSize'])  ) $item['size']  = $item['fontSize'];
-			// fix : list value
-			if ( isset($item['value']) and is_string($item['value']) and in_array($item['type'], ['ol','ul']) ) $item['value'] = array($item['value']);
-			// fix : encoding (for chinese)
-			if ( isset($item['value']) and in_array($pageOptions['fontFamily'], ['Big5','GB']) ) {
-				$encoding = ( $pageOptions['fontFamily'] == 'Big5' ) ? 'big5' : 'gbk';
-				if ( in_array($item['type'], ['ol','ul']) ) {
-					$item['value'] = array_map(fn($listItem) => iconv('utf-8', $encoding, $listItem), $item['value']);
-				} else {
-					$item['value'] = iconv('utf-8', $encoding, $item['value']);
-				}
-			}
-			// validation
-			$method = "pdf__render{$item['type']}";
-			if ( !method_exists(__CLASS__, $method) ) {
-				self::$error = 'Unknown type ('.$item['type'].')';
-				return false;
-			}
-			// render item as corresponding type
-			$itemResult = self::$method($pdf, $item, $pageOptions);
-			if ( $itemResult === false ) return false;
-		}
-		// save into file
-		$pdf->Output('F', $result['path']);
-		// done!
-		return $result;
-	}
-
-
-
-
-	/**
-	<fusedoc>
-		<description>
-			render line break to PDF
-		</description>
-		<io>
-			<in>
-				<object name="&$pdf" comments="reference" />
-				<structure name="$item">
-					<number name="repeat" optional="yes" default="1" />
-					<number name="size" optional="yes" />
-				</structure>
-				<structure name="$pageOptions" />
-			</in>
-			<out>
-				<boolean name="~return~" />
-			</out>
-		</io>
-	</fusedoc>
-	*/
-	private static function pdf__renderBR(&$pdf, $item, $pageOptions) {
-		$item['repeat'] = $item['repeat'] ?? 1;
-		$item['value'] = str_repeat(PHP_EOL, $item['repeat']);
-		return self::pdf__renderDiv($pdf, $item, $pageOptions);
-	}
-
-
-
-
-	/**
-	<fusedoc>
-		<description>
-			render paragraph (without bottom margin) to PDF
-		</description>
-		<io>
-			<in>
-				<object name="&$pdf" comments="reference" />
-				<structure name="$item">
-					<string name="value" />
-					<string name="align" optional="yes" default="J" comments="J|L|C|R" />
-					<boolean name="bold" optional="yes" default="false" />
-					<boolean name="italic" optional="yes" default="false" />
-					<boolean name="underline" optional="yes" default="false" />
-					<number name="size" optional="yes" default="~pageOptions[fontSize]~" />
-					<string name="color" optional="yes" />
-					<number name="indent" optional="yes" />
-					<string name="indentText" optional="yes" />
-				</structure>
-				<structure name="$pageOptions">
-					<string name="fontFamily" />
-					<string name="fontStyle" />
-					<number name="fontSize" />
-					<structure name="margin">
-						<number nam="L|R|T" />
-					</structure>
-				</structure>
-			</in>
-			<out>
-				<boolean name="~return~" />
-			</out>
-		</io>
-	</fusedoc>
-	*/
-	private static function pdf__renderDiv(&$pdf, $item, $pageOptions) {
-		$pageWidth = ( $pdf->GetPageWidth() - $pageOptions['margin']['L'] - $pageOptions['margin']['R'] );
-		// default
-		$item['value']     = $item['value']     ?? '';
-		$item['size']      = $item['size']      ?? $pageOptions['fontSize'];
-		$item['align']     = $item['align']     ?? 'J';
-		$item['bold']      = $item['bold']      ?? ( stripos($pageOptions['fontStyle'], 'B') !== false );
-		$item['italic']    = $item['italic']    ?? ( stripos($pageOptions['fontStyle'], 'I') !== false );
-		$item['underline'] = $item['underline'] ?? ( stripos($pageOptions['fontStyle'], 'U') !== false );
-		$item['color']     = $item['color']     ?? '000000';
-		// font style of item
-		$itemFontStyle = '';
-		if ( $item['bold']      ) $itemFontStyle .= 'B';
-		if ( $item['italic']    ) $itemFontStyle .= 'I';
-		if ( $item['underline'] ) $itemFontStyle .= 'U';
-		// font color in RGB
-		$color = self::hex2rgb($item['color']);
-		if ( $color === false ) return false;
-		// line height (for min cell height)
-		$lineHeight = $item['size'] / 2;
-		// change to specified font size & style
-		$pdf->setFont($pageOptions['fontFamily'], $itemFontStyle, $item['size']);
-		$pdf->setTextColor($color['r'], $color['g'], $color['b']);
-		// display indent (when necessary)
-		if ( !empty($item['indent']) ) $pdf->Cell($item['indent'], $lineHeight, $item['indentText'] ?? '', 0);
-		// display content
-		$contentWidth = $pageWidth - ( $item['indent'] ?? 0 );
-		$pdf->MultiCell($contentWidth, $lineHeight, $item['value'], 0, $item['align']);
-		// restore to original settings afterward
-		$pdf->setFont($pageOptions['fontFamily'], $pageOptions['fontStyle'], $pageOptions['fontSize']);
-		$pdf->setTextColor(0, 0, 0);
-		// done!
-		return true;
-	}
-
-
-
-
-	/**
-	<fusedoc>
-		<description>
-			render image to PDF
-		</description>
-		<io>
-			<in>
-				<object name="&$pdf" comments="reference" />
-				<structure name="$item">
-					<string name="src|value" />
-					<string name="align" optional="yes" comments="L|C|R" />
-					<number name="width" optional="yes" />
-					<number name="height" optional="yes" />
-				</structure>
-				<structure name="$pageOptions">
-					<structure name="margin">
-						<number name="L|R|T" />
-					</structure>
-				</structure>
-			</in>
-			<out>
-				<boolean name="~return~" />
-			</out>
-		</io>
-	</fusedoc>
-	*/
-	private static function pdf__renderImg(&$pdf, $item, $pageOptions) {
-		$pageWidth = ( $pdf->GetPageWidth() - $pageOptions['margin']['L'] - $pageOptions['margin']['R'] );
-		// calculate dimension
-		$width  = $item['width']  ?? $pageWidth;
-		$height = $item['height'] ?? null;
-		// calculate position
-		if     ( !isset($item['align']) ) $left = null;
-		elseif ( $item['align'] == 'C'  ) $left = ($pageWidth/2) - ($width/2) + $pageOptions['margin']['L'];
-		elseif ( $item['align'] == 'R'  ) $left = $pageWidth - $width + $pageOptions['margin']['L'];
-		else $left = null;
-		// display
-		$pdf->Image($item['src'] ?? $item['value'], $left, null, $width, $height);
-		// done!
-		return true;
-	}
-	private static function pdf__renderImage(&$pdf, $item, $pageOptions) { return self::pdf__renderImg($pdf, $item, $pageOptions); }
-
-
-
-
-	/**
-	<fusedoc>
-		<description>
-			render heading to PDF
-		</description>
-		<io>
-			<in>
-				<object name="&$pdf" comments="reference" />
-				<structure name="$item">
-					<string name="value" />
-					<string name="align" optional="yes" default="J" comments="J|L|C|R" />
-					<boolean name="italic" optional="yes" default="false" />
-					<boolean name="underline" optional="yes" default="false" />
-					<string name="color" optional="yes" />
-				</structure>
-				<structure name="$pageOptions">
-					<number name="fontSize" />
-				</structure>
-				<string name="$hSize" value="h1|h2|h3|h4|h5|h6" />
-			</in>
-			<out>
-				<boolean name="~return~" />
-			</out>
-		</io>
-	</fusedoc>
-	*/
-	private static function pdf__renderHeading(&$pdf, $item, $pageOptions, $hSize) {
-		$item['bold'] = true;
-		if ( $hSize == 'h1' ) $item['size'] = $pageOptions['fontSize'] * 2;
-		if ( $hSize == 'h2' ) $item['size'] = $pageOptions['fontSize'] * 1.5;
-		if ( $hSize == 'h3' ) $item['size'] = $pageOptions['fontSize'] * 1.17;
-		if ( $hSize == 'h5' ) $item['size'] = $pageOptions['fontSize'] * .83;
-		if ( $hSize == 'h6' ) $item['size'] = $pageOptions['fontSize'] * .67;
-		return self::pdf__renderDiv($pdf, $item, $pageOptions);
-	}
-	private static function pdf__renderH1(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h1'); }
-	private static function pdf__renderH2(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h2'); }
-	private static function pdf__renderH3(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h3'); }
-	private static function pdf__renderH4(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h4'); }
-	private static function pdf__renderH5(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h5'); }
-	private static function pdf__renderH6(&$pdf, $item, $pageOptions) { return self::pdf__renderHeading($pdf, $item, $pageOptions, 'h6'); }
-
-
-
-
-	/**
-	<fusedoc>
-		<description>
-			render horizontal line to PDF
-		</description>
-		<io>
-			<in>
-				<object name="&$pdf" comments="reference" />
-				<structure name="$item" />
-				<structure name="$pageOptions" />
-			</in>
-			<out>
-				<boolean name="~return~" />
-			</out>
-		</io>
-	</fusedoc>
-	*/
-	private static function pdf__renderHR(&$pdf, $item, $pageOptions) {
-		$pdf->MultiCell(null, 1, null, 'B');
-		return true;
-	}
-
-
-
-
-	/**
-	<fusedoc>
-		<description>
-			render list to PDF
-		</description>
-		<io>
-			<in>
-				<object name="&$pdf" comments="reference" />
-				<structure name="$item">
-					<array name="value">
-						<string name="+" />
-					</array>
-					<string name="align" optional="yes" default="J" comments="J|L|C|R" />
-					<boolean name="italic" optional="yes" default="false" />
-					<boolean name="underline" optional="yes" default="false" />
-					<string name="color" optional="yes" />
-					<string name="indent" optional="yes" default="10" />
-					<string name="bullet" optional="yes" default="~chr(149)~|{n}." />
-				</structure>
-				<structure name="$pageOptions" />
-				<string name="$listType" value="ol|ul" />
-			</in>
-			<out>
-				<boolean name="~return~" />
-			</out>
-		</io>
-	</fusedoc>
-	*/
-	private static function pdf__renderList(&$pdf, $item, $pageOptions, $listType) {
-		$item['value']  = $item['value']  ?? [];
-		$item['indent'] = $item['indent'] ?? 8;
-		$item['bullet'] = $item['bullet'] ?? ( ( $listType == 'ol' ) ? '{n}.' : chr(149) );
-		// go through each item in list
-		$i = 0;
-		foreach ( $item['value'] as $key => $val ) {
-			$i++;
-			// prepare options of list item
-			$listItem = $item;
-			$listItem['value'] = $val;
-			// when non-numeric key
-			// ===> use as bullet text
-			// ===> otherwise, auto-generate bullet text
-			if ( !is_numeric($key) ) $listItem['indentText'] = $key;
-			elseif ( $listType == 'ol' ) $listItem['indentText'] = str_replace('{n}', $i, $item['bullet']);
-			else $listItem['indentText'] = $item['bullet'];
-			// render list item
-			$rendered = self::pdf__renderDiv($pdf, $listItem, $pageOptions);
-			if ( $rendered === false ) return false;
-		}
-		// done!
-		return true;
-	}
-	private static function pdf__renderOL(&$pdf, $item, $pageOptions) { return self::pdf__renderList($pdf, $item, $pageOptions, 'ol'); }
-	private static function pdf__renderUL(&$pdf, $item, $pageOptions) { return self::pdf__renderList($pdf, $item, $pageOptions, 'ul'); }
-
-
-
-
-	/**
-	<fusedoc>
-		<description>
-			render paragraph (with bottom margin) to PDF
-		</description>
-		<io>
-			<in>
-				<object name="&$pdf" comments="reference" />
-				<structure name="$item">
-					<string name="value" />
-					<string name="align" optional="yes" default="J" comments="J|L|C|R" />
-					<boolean name="bold" optional="yes" default="false" />
-					<boolean name="italic" optional="yes" default="false" />
-					<boolean name="underline" optional="yes" default="false" />
-					<number name="size" optional="yes" default="~pageOptions[fontSize]~" />
-					<string name="color" optional="yes" />
-				</structure>
-				<structure name="$pageOptions" />
-			</in>
-			<out>
-				<boolean name="~return~" />
-			</out>
-		</io>
-	</fusedoc>
-	*/
-	private static function pdf__renderP(&$pdf, $item, $pageOptions) {
-		return ( self::pdf__renderDiv($pdf, $item, $pageOptions) and self::pdf__renderBR($pdf, $item, $pageOptions) );
-	}
-
-
-
-
-	/**
-	<fusedoc>
-		<description>
-			render page break to PDF
-		</description>
-		<io>
-			<in>
-				<object name="&$pdf" comments="reference" />
-				<structure name="$item" />
-				<structure name="$pageOptions" />
-			</in>
-			<out>
-				<boolean name="~return~" />
-			</out>
-		</io>
-	</fusedoc>
-	*/
-	private static function pdf__renderPageBreak(&$pdf, $item, $pageOptions) {
-		$pdf->AddPage();
-		return true;
-	}
-
-
-
-
-	/**
-	<fusedoc>
-		<description>
-			render small text to PDF
-		</description>
-		<io>
-			<in>
-				<object name="&$pdf" comments="reference" />
-				<structure name="$item">
-					<string name="value" />
-					<string name="align" optional="yes" default="J" comments="J|L|C|R" />
-					<boolean name="bold" optional="yes" default="false" />
-					<boolean name="italic" optional="yes" default="false" />
-					<boolean name="underline" optional="yes" default="false" />
-					<string name="color" optional="yes" />
-				</structure>
-				<structure name="$pageOptions">
-					<number name="fontSize" />
-				</structure>
-			</in>
-			<out>
-				<boolean name="~return~" />
-			</out>
-		</io>
-	</fusedoc>
-	*/
-	private static function pdf__renderSmall(&$pdf, $item, $pageOptions) {
-		$item['size'] = $pageOptions['fontSize'] * .8;
-		return self::pdf__renderDiv($pdf, $item, $pageOptions);
 	}
 
 
