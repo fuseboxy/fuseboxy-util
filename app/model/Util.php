@@ -296,7 +296,7 @@ class Util {
 		$pdf->setFont($pageOptions['fontFamily'], $itemFontStyle, $item['size']);
 		$pdf->setTextColor($color['r'], $color['g'], $color['b']);
 		// display indent (when necessary)
-		if ( !empty($item['indent']) ) $pdf->Cell($item['indent'], $contentHeight, $item['indentText'] ?? '', 0);
+		if ( !empty($item['indent']) ) $pdf->Cell($item['indent'], $contentHeight, ' '.$item['indentText'] ?? '', 0);
 		// display content
 		$contentWidth = $pdf->pgwidth - ( $item['indent'] ?? 0 );
 		$pdf->MultiCell($contentWidth, $contentHeight, $item['value'], 0, $item['align']);
@@ -455,7 +455,7 @@ class Util {
 	private static function array2pdf__renderList(&$pdf, $item, $pageOptions, $listType) {
 		$item['value']  = $item['value']  ?? [];
 		$item['indent'] = $item['indent'] ?? 8;
-		$item['bullet'] = $item['bullet'] ?? ( ( $listType == 'ol' ) ? '{n}.' : chr(149) );
+		$item['bullet'] = $item['bullet'] ?? ( ( $listType == 'ol' ) ? '{n}.' : '•' );
 		// go through each item in list
 		$i = 0;
 		foreach ( $item['value'] as $key => $val ) {
