@@ -2,8 +2,10 @@
 class Util {
 
 
-	// properties : library for corresponding methods
-	public static $libPath = array(
+	// property : config for certain methods
+	private static $config;
+	// property : library for corresponding methods
+	private static $libPath = array(
 		'array2pdf' => 'Mpdf\Mpdf',
 		'array2xls' => array(
 			'PhpOffice\PhpSpreadsheet\Spreadsheet',
@@ -737,6 +739,37 @@ class Util {
 		$writer->save($result['path']);
 		// done!
 		return $result;
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			getter & setter of config
+		</description>
+		<io>
+			<in>
+				<!-- property -->
+				<structure name="$config" scope="self" />
+				<!-- parameter -->
+				<string name="$key" optional="yes" comments="return all config when empty" />
+				<string name="$val" optional="yes" oncondition="when setter" />
+			</in>
+			<out>
+				<mixed name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function config($key, $val=null) {
+/*public static function config($key=null) {
+	global $fusebox;
+	if ( empty($key) ) return $fusebox->config;
+	if ( isset($fusebox->config[$key]) ) return $fusebox->config[$key];
+	return null;
+}*/
 	}
 
 
