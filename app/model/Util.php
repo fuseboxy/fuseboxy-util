@@ -46,11 +46,14 @@ class Util {
 		</description>
 		<io>
 			<in>
-				<!-- config -->
-				<structure name="config" scope="$fusebox">
+				<!-- framework config -->
+				<structure name="config" scope="$fusebox" optional="yes">
 					<string name="uploadDir" />
 					<string name="uploadUrl" />
 				</structure>
+				<!-- constants (when no framework config) -->
+				<string name="UTIL_UPLOAD_DIR" optional="yes" />
+				<string name="UTIL_UPLOAD_URL" optional="yes" />
 				<!-- parameters -->
 				<string name="$filePath" comments="relative path to upload directory" />
 				<array name="$fileData">
@@ -574,11 +577,14 @@ class Util {
 		</description>
 		<io>
 			<in>
-				<!-- config -->
-				<structure name="config" scope="$fusebox">
+				<!-- framework config -->
+				<structure name="config" scope="$fusebox" optional="yes">
 					<string name="uploadDir" />
 					<string name="uploadUrl" />
 				</structure>
+				<!-- constants (when no framework config) -->
+				<string name="UTIL_UPLOAD_DIR" optional="yes" />
+				<string name="UTIL_UPLOAD_URL" optional="yes" />
 				<!-- parameters -->
 				<string name="$filePath" comments="relative path to upload directory" />
 				<structure name="$fileData">
@@ -744,7 +750,7 @@ class Util {
 		<io>
 			<in>
 				<!-- framework config -->
-				<structure name="config" scope="$fusebox">
+				<structure name="config" scope="$fusebox" optional="yes">
 					<structure name="encrypt">
 						<string name="key" />
 						<string name="vendor" optional="yes" default="mcrypt|openssl" />
@@ -752,6 +758,14 @@ class Util {
 						<string name="mode" optional="yes" default="~MCRYPT_MODE_ECB~|0" comments="used as options for openssl" />
 						<string name="iv" optional="yes" default="" commens="initial vector" />
 					</structure>
+				</structure>
+				<!-- constants (when no framework config) -->
+				<structure name="UTIL_ENCRYPT" optional="yes">
+					<string name="key" />
+					<string name="vendor" />
+					<string name="algo" />
+					<string name="mode" />
+					<string name="iv" />
 				</structure>
 				<!-- param -->
 				<string name="$action" comments="encrypt|decrypt" />
@@ -915,11 +929,14 @@ class Util {
 		</description>
 		<io>
 			<in>
-				<!-- config -->
-				<structure name="config" scope="$fusebox">
+				<!-- framework config -->
+				<structure name="config" scope="$fusebox" optional="yes">
 					<string name="uploadDir" />
 					<string name="uploadUrl" />
 				</structure>
+				<!-- constants (when no framework config) -->
+				<string name="UTIL_UPLOAD_DIR" optional="yes" />
+				<string name="UTIL_UPLOAD_URL" optional="yes" />
 				<!-- parameters -->
 				<string name="$html" />
 				<string name="$filePath" optional="yes" comments="relative path to upload directory" />
@@ -1011,12 +1028,17 @@ class Util {
 		</description>
 		<io>
 			<in>
-				<structure name="config" scope="$fusebox">
+				<!-- framework config -->
+				<structure name="config" scope="$fusebox" optional="yes">
 					<string name="httpProxy" optional="yes" />
 					<string name="httpsProxy" optional="yes" />
 				</structure>
-				<string name="$url" />
+				<!-- constants (when no framework config) -->
+				<string name="UTIL_HTTP_PROXY" optional="yes" />
+				<string name="UTIL_HTTPS_PROXY" optional="yes" />
+				<!-- parameters -->
 				<string name="$method" default="GET" example="GET|POST|PUT|DELETE|.." />
+				<string name="$url" />
 				<structure name="$fields">
 					<string name="~fieldName~" comments="no url-encoded" />
 				</structure>
@@ -1135,9 +1157,9 @@ class Util {
 		</description>
 		<io>
 			<in>
-				<!-- config -->
-				<structure name="config" scope="$fusebox">
-					<structure name="smtp" optional="yes">
+				<!-- framework config -->
+				<structure name="config" scope="$fusebox" optional="yes">
+					<structure name="smtp">
 						<number name="debug" comments="1 = errors and messages, 2 = messages only" />
 						<boolean name="auth" comments="authentication enabled" />
 						<string name="secure" comments="ssl|tsl, secure transfer enabled REQUIRED for GMail" />
@@ -1146,6 +1168,16 @@ class Util {
 						<string name="username" />
 						<string name="password" />
 					</structure>
+				</structure>
+				<!-- constants (when no framework config) -->
+				<structure name="UTIL_SMTP" optional="yes">
+					<number name="debug" />
+					<boolean name="auth" />
+					<string name="secure" />
+					<string name="host" />
+					<number name="port" />
+					<string name="username" />
+					<string name="password" />
 				</structure>
 				<!-- parameter -->
 				<structure name="$param">
