@@ -1216,21 +1216,17 @@ class Util {
 		if ( empty($smtpConfig) ) {
 			self::$error = 'SMTP config is missing';
 			return false;
-		}
 		// validation
-		if ( empty($param['from']) ) {
+		} elseif ( empty($param['from']) ) {
 			self::$error = 'Mail sender was not specified';
 			return false;
-		}
-		if ( empty($param['to']) ) {
+		} elseif ( empty($param['to']) ) {
 			self::$error = 'Mail recipient was not specified';
 			return false;
-		}
-		if ( empty($param['subject']) ) {
+		} elseif ( empty($param['subject']) ) {
 			self::$error = 'Mail subject was not specified';
 			return false;
-		}
-		if ( empty($param['body']) ) {
+		} elseif ( empty($param['body']) ) {
 			self::$error = 'Mail body was not specified';
 			return false;
 		}
