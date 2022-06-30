@@ -57,7 +57,6 @@ class Util {
 				<string name="UTIL_UPLOAD_DIR" optional="yes" />
 				<string name="UTIL_UPLOAD_URL" optional="yes" />
 				<!-- parameters -->
-				<string name="$filePath" comments="relative path to upload directory" />
 				<array name="$fileData">
 					<structure name="+">
 						<string name="type" default="div" value="div|p|h1|h2|h3|h4|h5|h6|small|ol|ul|br|hr|img|pagebreak" />
@@ -84,6 +83,7 @@ class Util {
 						<string name="url" optional="yes" />
 					</structure>
 				</array>
+				<string name="$filePath" comments="relative path to upload directory" />
 				<!-- page options -->
 				<structure name="$options">
 					<string name="paperSize" default="A4" value="A3|A4|A5|~array(width,height)~">
@@ -112,7 +112,9 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function array2pdf($filePath, $fileData, $pageOptions=[]) {
+	public static function array2pdf($fileData, $filePath='', $pageOptions=[]) {
+		// fix parameters (avoid swapped)
+		if ( is_string($fileData) and is_array($filePath) ) list($fileData, $filePath) = array($filePath, $fileData);
 		// default page options
 		$pageOptions['paperSize']   = $pageOptions['paperSize']   ?? 'A4';
 		$pageOptions['orientation'] = $pageOptions['orientation'] ?? 'P';
@@ -588,7 +590,6 @@ class Util {
 				<string name="UTIL_UPLOAD_DIR" optional="yes" />
 				<string name="UTIL_UPLOAD_URL" optional="yes" />
 				<!-- parameters -->
-				<string name="$filePath" comments="relative path to upload directory" />
 				<structure name="$fileData">
 					<array name="~worksheetName~">
 						<structure name="+" comments="row">
@@ -596,6 +597,7 @@ class Util {
 						</structure>
 					</array>
 				</structure>
+				<string name="$filePath" comments="relative path to upload directory" />
 				<structure name="$options">
 					<boolean name="showRecordCount" optional="yes" />
 					<structure name="columnWidth" optional="yes">
@@ -617,7 +619,9 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function array2xls($filePath, $fileData, $options=[]) {
+	public static function array2xls($fileData, $filePath, $options=[]) {
+		// fix parameters (avoid swapped)
+		if ( is_string($fileData) and is_array($filePath) ) list($fileData, $filePath) = array($filePath, $fileData);
 		// mark start time
 		$startTime = microtime(true);
 		// validate library
