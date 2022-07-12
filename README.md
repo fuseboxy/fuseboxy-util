@@ -41,4 +41,17 @@ Methods
 #### streamFile
 #### uuid
 #### xls2array
+
 #### xslt
+```
+<io>
+	<in>
+		<string name="$xml_string" />
+		<string name="$xsl_string" />
+	</in>
+	<out>
+		<string name="~return~" optional="yes" oncondition="when success" />
+		<boolean name="~return~" value="false" optional="yes" oncondition="when failure" />
+	</out>
+</io>
+```
