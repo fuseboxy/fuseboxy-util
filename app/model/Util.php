@@ -767,9 +767,9 @@ public static function config($key=null) {
 		// load config (from framework or constant)
 		if ( class_exists('F') ) $baseConfig = F::config('encrypt');
 		elseif ( defined('FUSEBOXY_UTIL_ENCRYPT') ) $baseConfig = FUSEBOXY_UTIL_ENCRYPT;
+		else $baseConfig = array();
 		// fix base config
-		if ( empty($baseConfig) ) $baseConfig = array();
-		elseif ( is_string($baseConfig) ) $baseConfig = array('key' => $baseConfig);
+		if ( is_string($baseConfig) ) $baseConfig = array('key' => $baseConfig);
 		// merge base config into custom config
 		foreach ( $baseConfig as $baseKey => $baseVal ) $cfg[$baseKey] = $cfg[$baseKey] ?? $baseVal;
 		// validation
