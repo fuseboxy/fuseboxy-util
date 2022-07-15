@@ -788,23 +788,13 @@ public static function config($key=null) {
 		</description>
 		<io>
 			<in>
-				<!-- framework config -->
-				<structure name="config" scope="$fusebox" optional="yes">
-					<structure name="encrypt">
-						<string name="key" />
-						<string name="vendor" optional="yes" default="mcrypt|openssl" />
-						<string name="algo" optional="yes" default="~MCRYPT_RIJNDAEL_256~|BF-ECB" />
-						<string name="mode" optional="yes" default="~MCRYPT_MODE_ECB~|0" comments="used as options for openssl" />
-						<string name="iv" optional="yes" default="" commens="initial vector" />
-					</structure>
-				</structure>
-				<!-- constants (when no framework config) -->
-				<structure name="UTIL_ENCRYPT" optional="yes">
+				<!-- config -->
+				<structure name="$fusebox->config[encrypt]|FUSEBOXY_UTIL_ENCRYPT" optional="yes">
 					<string name="key" />
-					<string name="vendor" />
-					<string name="algo" />
-					<string name="mode" />
-					<string name="iv" />
+					<string name="vendor" optional="yes" default="mcrypt|openssl" />
+					<string name="algo" optional="yes" default="~MCRYPT_RIJNDAEL_256~|BF-ECB" />
+					<string name="mode" optional="yes" default="~MCRYPT_MODE_ECB~|0" comments="used as options for openssl" />
+					<string name="iv" optional="yes" default="" commens="initial vector" />
 				</structure>
 				<!-- param -->
 				<string name="$action" comments="encrypt|decrypt" />
@@ -824,8 +814,10 @@ public static function config($key=null) {
 		// fix custom config
 		if ( empty($cfg) ) $cfg = array();
 		elseif ( is_string($cfg) ) $cfg = array('key' => $cfg);
-		// load & fix base config
-		$baseConfig = F::config('encrypt');
+		// load config (from framework or constant)
+		if ( class_exists('F') ) $baseConfig = F::config('encrypt');
+		elseif ( defined('FUSEBOXY_UTIL_ENCRYPT') ) $baseConfig = FUSEBOXY_UTIL_ENCRYPT;
+		// fix base config
 		if ( empty($baseConfig) ) $baseConfig = array();
 		elseif ( is_string($baseConfig) ) $baseConfig = array('key' => $baseConfig);
 		// merge base config into custom config
