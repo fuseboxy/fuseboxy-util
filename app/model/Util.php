@@ -48,14 +48,6 @@ class Util {
 		</description>
 		<io>
 			<in>
-				<!-- framework config -->
-				<structure name="config" scope="$fusebox" optional="yes">
-					<string name="uploadDir" />
-					<string name="uploadUrl" />
-				</structure>
-				<!-- constants (when no framework config) -->
-				<string name="UTIL_UPLOAD_DIR" optional="yes" />
-				<string name="UTIL_UPLOAD_URL" optional="yes" />
 				<!-- parameters -->
 				<array name="$fileData">
 					<structure name="+">
@@ -113,7 +105,7 @@ class Util {
 	</fusedoc>
 	*/
 	public static function array2pdf($fileData, $filePath='', $pageOptions=[]) {
-		// fix parameters (avoid swapped)
+		// fix swapped parameters (when necessary)
 		if ( is_string($fileData) and is_array($filePath) ) list($fileData, $filePath) = array($filePath, $fileData);
 		// default page options
 		$pageOptions['paperSize']   = $pageOptions['paperSize']   ?? 'A4';
@@ -131,22 +123,9 @@ class Util {
 			self::$error = "[Util::array2pdf] mPDF library is missing ({$libClass})<br />Please use <em>composer</em> to install <strong>mpdf/mpdf</strong> into your project";
 			return false;
 		}
-		// unify directory separator
-		$filePath  = str_ireplace('\\', '/', $filePath);
-		$uploadDir = str_ireplace('\\', '/', F::config('uploadDir'));
-		$uploadUrl = str_ireplace('\\', '/', F::config('uploadUrl'));
 		// determine output location
-		$result = array(
-			'path' => $uploadDir.( ( substr($uploadDir, -1) != '/' ) ? '/' : '' ).$filePath,
-			'url'  => $uploadUrl.( ( substr($uploadUrl, -1) != '/' ) ? '/' : '' ).$filePath,
-		);
-		// create directory (when necessary)
-		$dir2create = dirname($result['path']);
-		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
-			$err = error_get_last();
-			self::$error = '[Util::array2pdf] '.$err['message'];
-			return false;
-		}
+		$result = array('path' => self::uploadDir($filePath), 'url'  => self::uploadUrl($filePath));
+		if ( $result['path'] === false or $result['url'] === false ) return false;
 		// start!
 		$pdf = new Mpdf\Mpdf([ 'mode' => 'utf-8', 'format' => $pageOptions['paperSize'] ]);
 		$pdf->SetFont($pageOptions['fontFamily'], $pageOptions['fontStyle'], $pageOptions['fontSize']);
@@ -581,14 +560,6 @@ class Util {
 		</description>
 		<io>
 			<in>
-				<!-- framework config -->
-				<structure name="config" scope="$fusebox" optional="yes">
-					<string name="uploadDir" />
-					<string name="uploadUrl" />
-				</structure>
-				<!-- constants (when no framework config) -->
-				<string name="UTIL_UPLOAD_DIR" optional="yes" />
-				<string name="UTIL_UPLOAD_URL" optional="yes" />
 				<!-- parameters -->
 				<structure name="$fileData">
 					<array name="~worksheetName~">
@@ -620,7 +591,7 @@ class Util {
 	</fusedoc>
 	*/
 	public static function array2xls($fileData, $filePath, $options=[]) {
-		// fix parameters (avoid swapped)
+		// fix swapped parameters
 		if ( is_string($fileData) and is_array($filePath) ) list($fileData, $filePath) = array($filePath, $fileData);
 		// mark start time
 		$startTime = microtime(true);
@@ -630,14 +601,6 @@ class Util {
 				self::$error = "[Util::array2xls] PhpSpreadsheet library is missing ({$libClass})<br />Please use <em>composer</em> to install <strong>phpoffice/phpspreadsheet</strong> into your project";
 				return false;
 			}
-		}
-		// validate config
-		if ( empty(F::config('uploadDir')) ) {
-			self::$error = '[Util::array2xls] Config [uploadDir] is required';
-			return false;
-		} elseif ( empty(F::config('uploadUrl')) ) {
-			self::$error = '[Util::array2xls] Config [uploadUrl] is required';
-			return false;
 		}
 		// validate data format
 		if ( !is_array($fileData) ) {
@@ -651,22 +614,9 @@ class Util {
 				return false;
 			}
 		}
-		// unify directory separator
-		$filePath  = str_ireplace('\\', '/', $filePath);
-		$uploadDir = str_ireplace('\\', '/', F::config('uploadDir'));
-		$uploadUrl = str_ireplace('\\', '/', F::config('uploadUrl'));
 		// determine output location
-		$result = array(
-			'path' => $uploadDir.( ( substr($uploadDir, -1) != '/' ) ? '/' : '' ).$filePath,
-			'url'  => $uploadUrl.( ( substr($uploadUrl, -1) != '/' ) ? '/' : '' ).$filePath,
-		);
-		// create directory (when necessary)
-		$dir2create = dirname($result['path']);
-		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
-			$err = error_get_last();
-			self::$error = '[Util::array2xls] '.$err['message'];
-			return false;
-		}
+		$result = array('path' => self::uploadDir($filePath), 'url'  => self::uploadUrl($filePath));
+		if ( $result['path'] === false or $result['url'] === false ) return false;
 		// create blank spreadsheet
 		$spreadsheet = new PhpOffice\PhpSpreadsheet\Spreadsheet();
 		// go through each worksheet
@@ -789,7 +739,7 @@ public static function config($key=null) {
 		<io>
 			<in>
 				<!-- config -->
-				<structure name="$fusebox->config[encrypt]|FUSEBOXY_UTIL_ENCRYPT" optional="yes">
+				<structure name="$fusebox->config['encrypt']|FUSEBOXY_UTIL_ENCRYPT" optional="yes">
 					<string name="key" />
 					<string name="vendor" optional="yes" default="mcrypt|openssl" />
 					<string name="algo" optional="yes" default="~MCRYPT_RIJNDAEL_256~|BF-ECB" />
@@ -960,14 +910,6 @@ public static function config($key=null) {
 		</description>
 		<io>
 			<in>
-				<!-- framework config -->
-				<structure name="config" scope="$fusebox" optional="yes">
-					<string name="uploadDir" />
-					<string name="uploadUrl" />
-				</structure>
-				<!-- constants (when no framework config) -->
-				<string name="UTIL_UPLOAD_DIR" optional="yes" />
-				<string name="UTIL_UPLOAD_URL" optional="yes" />
 				<!-- parameters -->
 				<string name="$html" />
 				<string name="$filePath" optional="yes" comments="relative path to upload directory" />
@@ -1015,25 +957,12 @@ public static function config($key=null) {
 		// validate library
 		$libClass = self::$libPath['html2pdf'];
 		if ( !class_exists($libClass) ) {
-			self::$error = "[Util::html2pdf] mPDF library is missing ({$libClass})<br />Please use <em>composer</em> to install <strong>mpdf/mpdf</strong> into your project";
+			self::$error = "[Util::html2pdf] mPDF library is missing ({$libClass}) - Please use <em>composer</em> to install <strong>mpdf/mpdf</strong> into your project";
 			return false;
 		}
-		// unify directory separator
-		$filePath  = str_ireplace('\\', '/', $filePath);
-		$uploadDir = str_ireplace('\\', '/', F::config('uploadDir'));
-		$uploadUrl = str_ireplace('\\', '/', F::config('uploadUrl'));
 		// determine output location
-		$result = array(
-			'path' => $uploadDir.( ( substr($uploadDir, -1) != '/' ) ? '/' : '' ).$filePath,
-			'url'  => $uploadUrl.( ( substr($uploadUrl, -1) != '/' ) ? '/' : '' ).$filePath,
-		);
-		// create directory (when necessary)
-		$dir2create = dirname($result['path']);
-		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
-			$err = error_get_last();
-			self::$error = '[Util::html2pdf] '.$err['message'];
-			return false;
-		}
+		$result = array('path' => self::uploadDir($filePath), 'url'  => self::uploadUrl($filePath));
+		if ( $result['path'] === false or $result['url'] === false ) return false;
 		// start!
 		$pdf = new Mpdf\Mpdf();
 		// magic config for CKJ characters
@@ -1425,6 +1354,98 @@ public static function config($key=null) {
 		if ( $options['deleteAfterward'] ) unlink($filePath);
 		// abort further operation
 		die();
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			load uploadDir from framework config or constant
+			===> append with specified sub-path
+			===> create directory in server
+		</description>
+		<io>
+			<in>
+				<!-- config -->
+				<string name="$fusebox->config['uploadDir']|FUSEBOXY_UTIL_UPLOAD_DIR" />
+				<!-- param -->
+				<path name="$append" optional="yes" comments="file path to append" />
+			</in>
+			<out>
+				<!-- new directory -->
+				<path name="dirname(~uploadDir~/~append~)" optional="yes" />
+				<!-- return value -->
+				<string name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	private static function uploadDir($append='') {
+		if ( class_exists('F') ) $result = F::config('uploadDir');
+		elseif ( defined('FUSEBOXY_UTIL_UPLOAD_DIR') ) $result = FUSEBOXY_UTIL_UPLOAD_DIR;
+		// validation
+		if ( empty($result) ) {
+			self::$error = '[Util::uploadDir] Config [uploadDir] is required';
+			return false;
+		}
+		// unify directory separator
+		$result = str_ireplace('\\', '/', $result);
+		$append = str_ireplace('\\', '/', $append);
+		// add trailing slash (when necessary)
+		if ( substr($result, -1) != '/' ) $result .= '/';
+		// append file path
+		$result .= $append;
+		// create directory (when necessary)
+		$dir2create = dirname($result);
+		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
+			$err = error_get_last();
+			self::$error = '[Util::uploadDir] Error creating directory ('.$err['message'].')';
+			return false;
+		}
+		// done!
+		return $result;
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			load uploadUrl from framework config or constant
+		</description>
+		<io>
+			<in>
+				<!-- config -->
+				<string name="$fusebox->config['uploadUrl']|FUSEBOXY_UTIL_UPLOAD_URL" />
+				<!-- param -->
+				<path name="$append" optional="yes" comments="file path to append" />
+			</in>
+			<out>
+				<string name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	private static function uploadUrl($append='') {
+		if ( class_exists('F') ) $result = F::config('uploadUrl');
+		elseif ( defined('FUSEBOXY_UTIL_UPLOAD_URL') ) $result = FUSEBOXY_UTIL_UPLOAD_URL;
+		// validation
+		if ( empty($result) ) {
+			self::$error = '[Util::uploadUrl] Config [uploadUrl] is required';
+			return false;
+		}
+		// unify directory separator
+		$result = str_ireplace('\\', '/', $result);
+		$append = str_ireplace('\\', '/', $append);
+		// add trailing slash (when necessary)
+		if ( substr($result, -1) != '/' ) $result .= '/';
+		// append file path
+		$result .= $append;
+		// done!
+		return $result;
 	}
 
 
