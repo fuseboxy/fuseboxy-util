@@ -1117,23 +1117,11 @@ public static function config($key=null) {
 		</description>
 		<io>
 			<in>
-				<!-- framework config -->
-				<structure name="config" scope="$fusebox" optional="yes">
-					<structure name="smtp">
-						<number name="debug" comments="1 = errors and messages, 2 = messages only" />
-						<boolean name="auth" comments="authentication enabled" />
-						<string name="secure" comments="ssl|tsl, secure transfer enabled REQUIRED for GMail" />
-						<string name="host" />
-						<number name="port" />
-						<string name="username" />
-						<string name="password" />
-					</structure>
-				</structure>
-				<!-- constants (when no framework config) -->
-				<structure name="UTIL_SMTP" optional="yes">
-					<number name="debug" />
-					<boolean name="auth" />
-					<string name="secure" />
+				<!-- config -->
+				<structure name="$fusebox->config['smtp']|FUSEBOXY_UTIL_SMTP">
+					<number name="debug" comments="1 = errors and messages, 2 = messages only" />
+					<string name="secure" comments="ssl|tsl, secure transfer enabled REQUIRED for GMail" />
+					<boolean name="auth" comments="authentication enabled" />
 					<string name="host" />
 					<number name="port" />
 					<string name="username" />
@@ -1171,12 +1159,17 @@ public static function config($key=null) {
 		if ( !empty($param['fromName']) and empty($param['from_name']) ) {
 			$param['from_name'] = $param['fromName'];
 		}
-		// load config (when necessary)
-		$smtpConfig = F::config('smtp');
+		// load config (from framework or constant)
+		if ( class_exists('F') ) $smtpConfig = F::config('smtp');
+		elseif ( defined('FUSEBOXY_UTIL_SMTP') ) $smtpConfig = FUSEBOXY_UTIL_SMTP;
+		else $smtpConfig = array();
+		// fix config
+		if ( is_string($smtpConfig) ) $smtpConfig = array('host' => $smtpConfig);
+		// validate config
 		if ( empty($smtpConfig) ) {
 			self::$error = '[Util::mail] SMTP config is missing';
 			return false;
-		// validation
+		// validate parameters
 		} elseif ( empty($param['from']) ) {
 			self::$error = '[Util::mail] Mail sender was not specified';
 			return false;
