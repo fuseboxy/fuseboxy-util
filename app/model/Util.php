@@ -1062,12 +1062,12 @@ public static function config($key=null) {
 		curl_setopt($ch, CURLOPT_VERBOSE, true);
 		curl_setopt($ch, CURLOPT_HEADER, true);
 		curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 6.2; WOW64; rv:17.0) Gecko/20100101 Firefox/17.0');
-		// apply proxy (when necessary)
-		if ( parse_url($url, PHP_URL_SCHEME) == 'https' and !empty( F::config('httpsProxy') ) ) {
-			$proxyConfig = F::config('httpsProxy');
-		} elseif ( !empty( F::config('httpProxy') ) ) {
-			$proxyConfig = F::config('httpProxy');
-		}
+		// load proxy config (when necessary)
+		$httpsProxy = class_exists('F') ? F::config('httpsProxy') : ( defined('FUSEBOXY_UTIL_HTTPS_PROXY') ? FUSEBOXY_UTIL_HTTPS_PROXY : '' );
+		$httpProxy  = class_exists('F') ? F::config('httpProxy')  : ( defined('FUSEBOXY_UTIL_HTTP_PROXY')  ? FUSEBOXY_UTIL_HTTP_PROXY  : '' );
+		if ( !empty($httpsProxy) and parse_url($url, PHP_URL_SCHEME) == 'https' ) $proxyConfig = $httpsProxy;
+		elseif ( !empty($httpProxy) ) $proxyConfig = $httpProxy;
+		// parse & apply proxy config (if any)
 		if ( isset($proxyConfig) ) {
 			$proxy = parse_url($proxyConfig);
 			$proxyAuth = '';
