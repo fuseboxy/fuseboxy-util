@@ -1031,7 +1031,7 @@ public static function config($key=null) {
 		$dir2create = dirname($result['path']);
 		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
 			$err = error_get_last();
-			self::$error = '[Util::html2pdf] '$err['message'];
+			self::$error = '[Util::html2pdf] '.$err['message'];
 			return false;
 		}
 		// start!
