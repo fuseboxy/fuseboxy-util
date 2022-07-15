@@ -83,7 +83,7 @@ class Util {
 						<string name="url" optional="yes" />
 					</structure>
 				</array>
-				<string name="$filePath" comments="relative path to upload directory" />
+				<string name="$filePath" optional="yes" comments="relative path to upload directory" />
 				<!-- page options -->
 				<structure name="$options">
 					<string name="paperSize" default="A4" value="A3|A4|A5|~array(width,height)~">
@@ -118,7 +118,7 @@ class Util {
 		// default page options
 		$pageOptions['paperSize']   = $pageOptions['paperSize']   ?? 'A4';
 		$pageOptions['orientation'] = $pageOptions['orientation'] ?? 'P';
-		$pageOptions['fontFamily']  = $pageOptions['fontFamily']  ?? 'Times';  // use 'Big5' for traditional chinese; use 'GB' for simplified chinese
+		$pageOptions['fontFamily']  = $pageOptions['fontFamily']  ?? 'Times';
 		$pageOptions['fontStyle']   = $pageOptions['fontStyle']   ?? '';
 		$pageOptions['fontSize']    = $pageOptions['fontSize']    ?? 12;
 		$pageOptions['margin']      = $pageOptions['margin']      ?? [];
@@ -128,7 +128,7 @@ class Util {
 		// validate library
 		$libClass = self::$libPath['html2pdf'];
 		if ( !class_exists($libClass) ) {
-			self::$error = "mPDF library is missing ({$libClass})<br />Please use <em>composer</em> to install <strong>mpdf/mpdf</strong> into your project";
+			self::$error = "[Util::array2pdf] mPDF library is missing ({$libClass})<br />Please use <em>composer</em> to install <strong>mpdf/mpdf</strong> into your project";
 			return false;
 		}
 		// unify directory separator
@@ -144,7 +144,7 @@ class Util {
 		$dir2create = dirname($result['path']);
 		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
 			$err = error_get_last();
-			self::$error = $err['message'];
+			self::$error = '[Util::array2pdf] '.$err['message'];
 			return false;
 		}
 		// start!
@@ -170,7 +170,7 @@ class Util {
 			// validation
 			$method = "array2pdf__render{$item['type']}";
 			if ( !method_exists(__CLASS__, $method) ) {
-				self::$error = 'Unknown type ('.$item['type'].')';
+				self::$error = '[Util::array2pdf] Unknown type ('.$item['type'].')';
 				return false;
 			}
 			// render item as corresponding type
@@ -627,27 +627,27 @@ class Util {
 		// validate library
 		foreach ( self::$libPath['array2xls'] as $libClass ) {
 			if ( !class_exists($libClass) ) {
-				self::$error = "PhpSpreadsheet library is missing ({$libClass})<br />Please use <em>composer</em> to install <strong>phpoffice/phpspreadsheet</strong> into your project";
+				self::$error = "[Util::array2xls] PhpSpreadsheet library is missing ({$libClass})<br />Please use <em>composer</em> to install <strong>phpoffice/phpspreadsheet</strong> into your project";
 				return false;
 			}
 		}
 		// validate config
 		if ( empty(F::config('uploadDir')) ) {
-			self::$error = 'Config [uploadDir] is required';
+			self::$error = '[Util::array2xls] Config [uploadDir] is required';
 			return false;
 		} elseif ( empty(F::config('uploadUrl')) ) {
-			self::$error = 'Config [uploadUrl] is required';
+			self::$error = '[Util::array2xls] Config [uploadUrl] is required';
 			return false;
 		}
 		// validate data format
 		if ( !is_array($fileData) ) {
-			self::$error = 'Invalid data structure for Excel (Array is required)';
+			self::$error = '[Util::array2xls] Invalid data structure for Excel (Array is required)';
 			return false;
 		} elseif ( !empty($fileData) ) {
 			$firstWorksheetKey = array_key_first($fileData);
 			$firstWorksheetData = $fileData[$firstWorksheetKey];
 			if ( !is_array($firstWorksheetData) ) {
-				self::$error = 'Invalid data structure for Excel (1st level of array is worksheet name, and 2nd level of array is worksheet data)';
+				self::$error = '[Util::array2xls] Invalid data structure for Excel (1st level of array is worksheet name, and 2nd level of array is worksheet data)';
 				return false;
 			}
 		}
@@ -664,7 +664,7 @@ class Util {
 		$dir2create = dirname($result['path']);
 		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
 			$err = error_get_last();
-			self::$error = $err['message'];
+			self::$error = '[Util::array2xls] '.$err['message'];
 			return false;
 		}
 		// create blank spreadsheet
@@ -768,12 +768,14 @@ class Util {
 	</fusedoc>
 	*/
 	public static function config($key, $val=null) {
-/*public static function config($key=null) {
+/*
+public static function config($key=null) {
 	global $fusebox;
 	if ( empty($key) ) return $fusebox->config;
 	if ( isset($fusebox->config[$key]) ) return $fusebox->config[$key];
 	return null;
-}*/
+}
+*/
 	}
 
 
@@ -830,7 +832,7 @@ class Util {
 		foreach ( $baseConfig as $baseKey => $baseVal ) $cfg[$baseKey] = $cfg[$baseKey] ?? $baseVal;
 		// validation
 		if ( empty($cfg['key']) ) {
-			self::$error = 'Encryption key is missing';
+			self::$error = '[Util::crypt] Encryption key is missing';
 			return false;
 		}
 		// defult config
@@ -871,17 +873,17 @@ class Util {
 				$result = rtrim($result, "\0");
 			// validation
 			} else {
-				self::$error = "Invalid action ({$action})";
+				self::$error = "[Util::crypt] Invalid action ({$action})";
 				return false;
 			}
 		// catch any error
 		} catch (Exception $e) {
-			self::$error = 'Crypt error ('.$e->getMessage().')';
+			self::$error = '[Util::crypt] Crypt error ('.$e->getMessage().')';
 			return false;
 		}
 		// validate result
 		if ( $result === '' ) {
-			self::$error = "Failed to {$action} data";
+			self::$error = "[Util::crypt] Failed to {$action} data";
 			return false;
 		}
 		// done!
@@ -946,7 +948,7 @@ class Util {
 		// load library
 		foreach ( self::$libPath['html2md'] as $path ) {
 			if ( !is_file($path) ) {
-				self::$error = "Markdownify library is missing ({$path})";
+				self::$error = "[Util::html2md] Markdownify library is missing ({$path})";
 				return false;
 			}
 			require_once($path);
@@ -1021,7 +1023,7 @@ class Util {
 		// validate library
 		$libClass = self::$libPath['html2pdf'];
 		if ( !class_exists($libClass) ) {
-			self::$error = "mPDF library is missing ({$libClass})<br />Please use <em>composer</em> to install <strong>mpdf/mpdf</strong> into your project";
+			self::$error = "[Util::html2pdf] mPDF library is missing ({$libClass})<br />Please use <em>composer</em> to install <strong>mpdf/mpdf</strong> into your project";
 			return false;
 		}
 		// unify directory separator
@@ -1037,7 +1039,7 @@ class Util {
 		$dir2create = dirname($result['path']);
 		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
 			$err = error_get_last();
-			self::$error = $err['message'];
+			self::$error = '[Util::html2pdf] '$err['message'];
 			return false;
 		}
 		// start!
@@ -1174,14 +1176,14 @@ class Util {
 		}
 		// validate response
 		if ( isset($pageError) ) {
-			self::$error = $pageError;
+			self::$error = '[Util::httpRequest] '.$pageError;
 			return false;
 		}
 		// success!
 		return $pageBody;
 	}
 	// alias methods
-	public static function getPage ($url,             &$httpStatus=null, &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET',  $url, [],      [], $httpStatus, $responseHeader, $responseTime); }
+	public static function getPage($url, &$httpStatus=null, &$responseHeader=null, &$responseTime=null) { return self::httpRequest('GET', $url, [], [], $httpStatus, $responseHeader, $responseTime); }
 	public static function postPage($url, $fields=[], &$httpStatus=null, &$responseHeader=null, &$responseTime=null) { return self::httpRequest('POST', $url, $fields, [], $httpStatus, $responseHeader, $responseTime); }
 
 
@@ -1239,7 +1241,7 @@ class Util {
 		// load library
 		foreach ( self::$libPath['mail'] as $path ) {
 			if ( !is_file($path) ) {
-				self::$error = "PHPMailer library is missing ({$path})";
+				self::$error = "[Util::mail] PHPMailer library is missing ({$path})";
 				return false;
 			}
 			require_once($path);
@@ -1251,20 +1253,20 @@ class Util {
 		// load config (when necessary)
 		$smtpConfig = F::config('smtp');
 		if ( empty($smtpConfig) ) {
-			self::$error = 'SMTP config is missing';
+			self::$error = '[Util::mail] SMTP config is missing';
 			return false;
 		// validation
 		} elseif ( empty($param['from']) ) {
-			self::$error = 'Mail sender was not specified';
+			self::$error = '[Util::mail] Mail sender was not specified';
 			return false;
 		} elseif ( empty($param['to']) ) {
-			self::$error = 'Mail recipient was not specified';
+			self::$error = '[Util::mail] Mail recipient was not specified';
 			return false;
 		} elseif ( empty($param['subject']) ) {
-			self::$error = 'Mail subject was not specified';
+			self::$error = '[Util::mail] Mail subject was not specified';
 			return false;
 		} elseif ( empty($param['body']) ) {
-			self::$error = 'Mail body was not specified';
+			self::$error = '[Util::mail] Mail body was not specified';
 			return false;
 		}
 		// start...
@@ -1305,10 +1307,10 @@ class Util {
 			$mailer->Body = $param['body'];
 			// send message
 			$result = $mailer->Send();
-			if ( !$result ) self::$error = "Error occurred while sending mail ({$mailer->ErrorInfo})";
+			if ( !$result ) self::$error = "[Util::mail] Error occurred while sending mail ({$mailer->ErrorInfo})";
 		// catch any error
 		} catch (Exception $e) {
-			self::$error = 'Mail error ('.$e->getMessage().')';
+			self::$error = '[Util::mail] Mail error ('.$e->getMessage().')';
 			return false;
 		}
 		// done!
@@ -1340,7 +1342,7 @@ class Util {
 		// load library
 		$path = self::$libPath['md2html'];
 		if ( !is_file($path) ) {
-			self::$error = "Parsedown library is missing ({$path})";
+			self::$error = "[Util::md2html] Parsedown library is missing ({$path})";
 			return false;
 		}
 		require_once($path);
@@ -1379,7 +1381,7 @@ class Util {
 		// load library
 		$path = self::$libPath['phpQuery'];
 		if ( !is_file($path) ) {
-			self::$error = "phpQuery library is missing ({$path})";
+			self::$error = "[Util::phpQuery] phpQuery library is missing ({$path})";
 			return false;
 		}
 		require_once($path);
@@ -1413,7 +1415,7 @@ class Util {
 		$options['deleteAfterward'] = $options['deleteAfterward'] ?? false;
 		// check file existence
 		if ( !is_file($filePath) ) {
-			self::$error = "File not found ({$filePath})";
+			self::$error = "[Util::streamFile] File not found ({$filePath})";
 			return false;
 		}
 		// get file info
@@ -1458,10 +1460,10 @@ class Util {
 		$version = strtolower($version);
 		// validation
 		if ( !in_array($version, ['v3','v4','v5']) ) {
-			self::$error = "Invalid UUID version ({$version})";
+			self::$error = "[Util::uuid] Invalid UUID version ({$version})";
 			return false;
 		} elseif ( in_array($version, ['v3','v5']) and ( empty($namespace) or empty($name) ) ) {
-			self::$error = 'Arguments [namespace] and [name] are both required';
+			self::$error = '[Util::uuid] Arguments [namespace] and [name] are both required';
 			return false;
 		}
 		// determine method to call
@@ -1470,7 +1472,7 @@ class Util {
 		return ( $version == 'v4' ) ? call_user_func($method) : call_user_func($method, $namespace, $name);
 	}
 	// UUID v3
-	public static function uuid__v3($namespace, $name) {
+	private static function uuid__v3($namespace, $name) {
 		if ( self::uuid__isValidNamespace($namespace) === false ) return false;
 		// Get hexadecimal components of namespace
 		$nhex = str_replace(array('-','{','}'), '', $namespace);
@@ -1498,7 +1500,7 @@ class Util {
 		);
 	}
 	// UUID v4
-	public static function uuid__v4() {
+	private static function uuid__v4() {
 		return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
 			// 32 bits for "time_low"
 			mt_rand(0, 0xffff), mt_rand(0, 0xffff),
@@ -1516,7 +1518,7 @@ class Util {
 		);
 	}
 	// UUID v5
-	public static function uuid__v5($namespace, $name) {
+	private static function uuid__v5($namespace, $name) {
 		if ( self::uuid__isValidNamespace($namespace) === false ) return false;
 		// Get hexadecimal components of namespace
 		$nhex = str_replace(array('-','{','}'), '', $namespace);
@@ -1544,10 +1546,10 @@ class Util {
 		);
 	}
 	// UUID namspace validation
-	public static function uuid__isValidNamespace($namespace) {
+	private static function uuid__isValidNamespace($namespace) {
 		$valid = ( preg_match('/^\{?[0-9a-f]{8}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{4}\-?[0-9a-f]{12}\}?$/i', $uuid) === 1 );
 		if ( !$valid ) {
-			self::$error = "Invalid UUID namespace ({$namespace})";
+			self::$error = "[Util::uuid] Invalid UUID namespace ({$namespace})";
 			return false;
 		}
 		return true;
@@ -1592,7 +1594,7 @@ class Util {
 		// load library
 		foreach ( self::$libPath['xls2array'] as $path ) {
 			if ( !is_file($path) ) {
-				self::$error = "SimpleXLSX library is missing ({$path})";
+				self::$error = "[Util::xls2array] SimpleXLSX library is missing ({$path})";
 				return false;
 			}
 			require_once($path);
@@ -1600,10 +1602,10 @@ class Util {
 		// validation
 		$fileExt = strtoupper( pathinfo($file, PATHINFO_EXTENSION) );
 		if ( !is_file($file) ) {
-			self::$error = "File not found ({$file})";
+			self::$error = "[Util::xls2array] File not found ({$file})";
 			return false;
 		} elseif ( !in_array($fileExt, ['XLSX','XLS','CSV']) ) {
-			self::$error = "File type <strong><em>{$fileExt}</em></strong> is not supported";
+			self::$error = "[Util::xls2array] File type <strong><em>{$fileExt}</em></strong> is not supported";
 			return false;
 		}
 		// parse csv by php
@@ -1615,7 +1617,7 @@ class Util {
 		} else {
 			$data = call_user_func('Simple'.$fileExt.'::parse', $file);
 			if ( $data === false ) {
-				self::$error = call_user_func('Simple'.$fileExt.'::parseError');
+				self::$error = '[Util::xls2array] '.call_user_func('Simple'.$fileExt.'::parseError');
 				return false;
 			}
 		}
@@ -1697,10 +1699,10 @@ class Util {
 			$proc->importStyleSheet($xsl);
 			// return string (when succeed) or false (when fail)
 			$result = $proc->transformToXML($xml);
-			if ( !$result ) self::$error = libxml_get_last_error();
+			if ( !$result ) self::$error = '[Util::xslt] '.libxml_get_last_error();
 		// catch any error
 		} catch (Exception $e) {
-			self::$error = 'XSLT error ('.$e->getMessage().')';
+			self::$error = '[Util::xslt] XSLT error ('.$e->getMessage().')';
 			return false;
 		}
 		// done!
