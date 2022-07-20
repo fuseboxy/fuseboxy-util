@@ -421,8 +421,8 @@ class Util {
 					<boolean name="italic" optional="yes" default="false" />
 					<boolean name="underline" optional="yes" default="false" />
 					<string name="color" optional="yes" />
-					<string name="indent" optional="yes" default="10" />
-					<string name="bullet" optional="yes" default="~chr(149)~|{n}." />
+					<string name="indent" optional="yes" default="8" />
+					<string name="bullet" optional="yes" default="{n}.|~dot~" />
 				</structure>
 				<structure name="$pageOptions" />
 				<string name="$listType" value="ol|ul" />
