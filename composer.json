@@ -4,10 +4,15 @@
 	"license": "MIT",
 	"type": "fuseboxy-module",
 	"require": {
+		"fuseboxy/fuseboxy-installer": "*",
+		"mpdf/mpdf" : "^8.1",
         "phpoffice/phpspreadsheet" : "1.14.*",
-		"fuseboxy/fuseboxy-installer": "*"
+		"psr/log" : "1.1.*"
 	},
 	"autoload": {
-		"files": [ "app/model/Util.php" ]
+		"files": [
+			"app/model/Util.php",
+			"app/model/Util_PDF.php"
+		]
 	}
 }
