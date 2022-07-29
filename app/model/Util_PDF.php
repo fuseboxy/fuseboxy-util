@@ -98,9 +98,6 @@ class Util_PDF {
 			self::$error = "[Util_PDF::array2pdf] mPDF library is missing ({$libClass})<br />Please use <em>composer</em> to install <strong>mpdf/mpdf</strong> into your project";
 			return false;
 		}
-		// determine output location
-		$result = array('path' => Util::uploadDir($filePath), 'url'  => Util::uploadUrl($filePath));
-		if ( $result['path'] === false or $result['url'] === false ) return false;
 		// start!
 		$pdf = new Mpdf\Mpdf([ 'mode' => 'utf-8', 'format' => $pageOptions['paperSize'] ]);
 		$pdf->SetFont($pageOptions['fontFamily'], $pageOptions['fontStyle'], $pageOptions['fontSize']);
@@ -133,6 +130,12 @@ class Util_PDF {
 		}
 		// view as PDF directly (when file path not specified)
 		if ( empty($filePath) ) die( $pdf->Output() );
+		// determine output location
+		$result = array('path' => Util::uploadDir($filePath), 'url'  => Util::uploadUrl($filePath));
+		if ( $result['path'] === false or $result['url'] === false ) {
+			self::$error = '[Util_PDF::array2pdf] '.Util::error();
+			return false;
+		}
 		// save into file
 		$pdf->Output($result['path']);
 		// done!
@@ -244,8 +247,11 @@ class Util_PDF {
 		if ( $item['italic']    ) $itemFontStyle .= 'I';
 		if ( $item['underline'] ) $itemFontStyle .= 'U';
 		// font color in RGB
-		$color = self::hex2rgb($item['color']);
-		if ( $color === false ) return false;
+		$color = Util::hex2rgb($item['color']);
+		if ( $color === false ) {
+			self::$error = '[Util_PDF::array2pdf__renderDiv] '.Util::error();
+			return false;
+		}
 		// min cell height
 		$contentHeight = $item['size'] / 2;
 		// change to specified font size & style
@@ -585,9 +591,6 @@ class Util_PDF {
 			self::$error = "[Util_PDF::html2pdf] mPDF library is missing ({$libClass}) - Please use <em>composer</em> to install <strong>mpdf/mpdf</strong> into your project";
 			return false;
 		}
-		// determine output location
-		$result = array('path' => Util::uploadDir($filePath), 'url'  => Util::uploadUrl($filePath));
-		if ( $result['path'] === false or $result['url'] === false ) return false;
 		// start!
 		$pdf = new Mpdf\Mpdf();
 		// magic config for CKJ characters
@@ -597,6 +600,12 @@ class Util_PDF {
 		$pdf->WriteHTML($html);
 		// view as PDF directly (when file path not specified)
 		if ( empty($filePath) ) die( $pdf->Output() );
+		// determine output location
+		$result = array('path' => Util::uploadDir($filePath), 'url'  => Util::uploadUrl($filePath));
+		if ( $result['path'] === false or $result['url'] === false ) {
+			self::$error = '[Util_PDF::html2pdf] '.Util::error();
+			return false;
+		}
 		// save into file
 		$pdf->Output($result['path']);
 		// done!
