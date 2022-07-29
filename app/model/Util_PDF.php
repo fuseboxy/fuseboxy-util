@@ -99,7 +99,7 @@ class Util_PDF {
 			return false;
 		}
 		// determine output location
-		$result = array('path' => self::uploadDir($filePath), 'url'  => self::uploadUrl($filePath));
+		$result = array('path' => Util::uploadDir($filePath), 'url'  => Util::uploadUrl($filePath));
 		if ( $result['path'] === false or $result['url'] === false ) return false;
 		// start!
 		$pdf = new Mpdf\Mpdf([ 'mode' => 'utf-8', 'format' => $pageOptions['paperSize'] ]);
@@ -586,7 +586,7 @@ class Util_PDF {
 			return false;
 		}
 		// determine output location
-		$result = array('path' => self::uploadDir($filePath), 'url'  => self::uploadUrl($filePath));
+		$result = array('path' => Util::uploadDir($filePath), 'url'  => Util::uploadUrl($filePath));
 		if ( $result['path'] === false or $result['url'] === false ) return false;
 		// start!
 		$pdf = new Mpdf\Mpdf();

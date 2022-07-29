@@ -822,7 +822,7 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	private static function uploadDir($append='') {
+	public static function uploadDir($append='') {
 		if ( class_exists('F') ) $result = F::config('uploadDir');
 		elseif ( defined('FUSEBOXY_UTIL_UPLOAD_DIR') ) $result = FUSEBOXY_UTIL_UPLOAD_DIR;
 		// validation
@@ -869,7 +869,7 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	private static function uploadUrl($append='') {
+	public static function uploadUrl($append='') {
 		if ( class_exists('F') ) $result = F::config('uploadUrl');
 		elseif ( defined('FUSEBOXY_UTIL_UPLOAD_URL') ) $result = FUSEBOXY_UTIL_UPLOAD_URL;
 		// validation
