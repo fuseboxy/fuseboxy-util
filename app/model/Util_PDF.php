@@ -95,7 +95,7 @@ class Util_PDF {
 		// validate library
 		$libClass = self::$libPath['html2pdf'];
 		if ( !class_exists($libClass) ) {
-			self::$error = "[Util::array2pdf] mPDF library is missing ({$libClass})<br />Please use <em>composer</em> to install <strong>mpdf/mpdf</strong> into your project";
+			self::$error = "[Util_PDF::array2pdf] mPDF library is missing ({$libClass})<br />Please use <em>composer</em> to install <strong>mpdf/mpdf</strong> into your project";
 			return false;
 		}
 		// determine output location
@@ -124,7 +124,7 @@ class Util_PDF {
 			// validation
 			$method = "array2pdf__render{$item['type']}";
 			if ( !method_exists(__CLASS__, $method) ) {
-				self::$error = '[Util::array2pdf] Unknown type ('.$item['type'].')';
+				self::$error = '[Util_PDF::array2pdf] Unknown type ('.$item['type'].')';
 				return false;
 			}
 			// render item as corresponding type
@@ -582,7 +582,7 @@ class Util_PDF {
 		// validate library
 		$libClass = self::$libPath['html2pdf'];
 		if ( !class_exists($libClass) ) {
-			self::$error = "[Util::html2pdf] mPDF library is missing ({$libClass}) - Please use <em>composer</em> to install <strong>mpdf/mpdf</strong> into your project";
+			self::$error = "[Util_PDF::html2pdf] mPDF library is missing ({$libClass}) - Please use <em>composer</em> to install <strong>mpdf/mpdf</strong> into your project";
 			return false;
 		}
 		// determine output location
