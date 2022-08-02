@@ -756,6 +756,34 @@ class Util {
 	/**
 	<fusedoc>
 		<description>
+			obtain request scheme (http/https)
+		</description>
+		<io>
+			<in>
+				<string name="HTTP_X_FORWARDED_PROTO" scope="$_SERVER" optional="yes" oncondition="load-balancer" />
+				<string name="HTTPS" scope="$_SERVER" comments="on|1" optional="yes" />
+				<string name="REQUEST_SCHEME" scope="$_SERVER" comments="http|https" optional="yes" />
+			</in>
+			<out>
+				<string name="~return~" comments="http|https" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function requestScheme() {
+		if ( isset($_SERVER['HTTP_X_FORWARDED_PROTO']) ) return strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']);
+		if ( isset($_SERVER['HTTPS']) and in_array($_SERVER['HTTPS'], ['on','1']) ) return 'https';
+		if ( isset($_SERVER['REQUEST_SCHEME']) ) return strtolower($_SERVER['REQUEST_SCHEME']);
+		if ( isset($_SERVER['SERVER_PORT']) && intval($_SERVER['SERVER_PORT']) === 443 ) return 'https';
+		return 'http';
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
 			load file from server and feed binary stream to browser
 		</description>
 		<io>
@@ -793,7 +821,7 @@ class Util {
 		// remove file afterward
 		if ( $options['deleteAfterward'] ) unlink($filePath);
 		// abort further operation
-		die();
+		exit();
 	}
 
 
