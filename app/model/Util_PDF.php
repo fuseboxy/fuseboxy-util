@@ -486,7 +486,7 @@ class Util_PDF {
 		// write output to file
 		$pdf->WriteHTML($html);
 		// view as PDF directly (when file path not specified)
-		if ( empty($filePath) ) die( $pdf->Output() );
+		if ( empty($filePath) ) exit($pdf->Output());
 		// determine output location
 		$result = array('path' => Util::uploadDir($filePath), 'url'  => Util::uploadUrl($filePath));
 		if ( $result['path'] === false or $result['url'] === false ) {
