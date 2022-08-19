@@ -263,7 +263,7 @@ class Util_PDF {
 	</fusedoc>
 	*/
 	private static function array2html__hr($item) {
-		return '<hr />';
+		return '<hr style="border: solid black; border-width: 1px 0 0 0;" />';
 	}
 
 
