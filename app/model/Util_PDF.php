@@ -100,7 +100,7 @@ class Util_PDF {
 			<in>
 				<structure name="$item">
 					<string name="type" value="br" />
-					<number name="repeat" optional="yes" default="1" />
+					<number name="repeat|value" optional="yes" default="1" />
 				</structure>
 			</in>
 			<out>
@@ -110,7 +110,7 @@ class Util_PDF {
 	</fusedoc>
 	*/
 	private static function array2html__br($item) {
-		return str_repeat('<br />', $item['repeat'] ?? 1);
+		return str_repeat('<br />', $item['repeat'] ?? $item['value'] ?? 1);
 	}
 
 
