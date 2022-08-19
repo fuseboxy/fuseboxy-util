@@ -4,7 +4,7 @@
 	"license": "MIT",
 	"type": "fuseboxy-module",
 	"require": {
-		"fuseboxy/fuseboxy-installer": "*",
+		"fuseboxy/fuseboxy-installer": "2.2.x",
 		"mpdf/mpdf" : "^8.1",
         "phpoffice/phpspreadsheet" : "1.14.*",
 		"psr/log" : "1.1.*"
