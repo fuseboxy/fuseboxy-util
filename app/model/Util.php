@@ -4,7 +4,7 @@ class Util {
 
 	// property : library for corresponding methods
 	private static $libPath = array(
-		'array2pdf' => 'Mpdf\Mpdf',
+		'array2pdf' => 'Util_PDF',
 		'array2xls' => array(
 			'PhpOffice\PhpSpreadsheet\Spreadsheet',
 			'PhpOffice\PhpSpreadsheet\Writer\Xlsx',
@@ -14,6 +14,7 @@ class Util {
 			__DIR__.'/../../lib/markdownify/2.3.1/src/Converter.php',
 			__DIR__.'/../../lib/markdownify/2.3.1/src/ConverterExtra.php',
 		),
+		'html2pdf' => 'Util_PDF',
 		'mail' => array(
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/PHPMailer.php',
 			__DIR__.'/../../lib/phpmailer/6.1.6/src/Exception.php',
@@ -62,11 +63,20 @@ class Util {
 	</fusedoc>
 	*/
 	public static function array2pdf($fileData, $filePath='', $pageOptions=[]) {
+		// validate library
+		foreach ( self::$libPath['array2pdf'] as $libClass ) {
+			if ( !class_exists($libClass) ) {
+				self::$error = "[Util::array2pdf] Library is missing ({$libClass})";
+				return false;
+			}
+		}
+		// proceed to transform
 		$result = Util_PDF::array2pdf($fileData, $filePath, $pageOptions);
 		if ( $result === false ) {
 			self::$error = '[Util::array2pdf] '.Util_PDF::error();
 			return false;
 		}
+		// done!
 		return $result;
 	}
 
@@ -414,16 +424,24 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-/*
 	public static function html2pdf($html, $filePath=null, $options=[]) {
-		$result = Util_PDF::html2pdf($fileData, $filePath, $pageOptions);
+		// validate library
+		foreach ( self::$libPath['html2pdf'] as $libClass ) {
+			if ( !class_exists($libClass) ) {
+				self::$error = "[Util::html2pdf] Library is missing ({$libClass})";
+				return false;
+			}
+		}
+		// proceed to transform
+		$result = Util_PDF::array2pdf($html, $filePath, $pageOptions);
 		if ( $result === false ) {
 			self::$error = '[Util::html2pdf] '.Util_PDF::error();
 			return false;
 		}
+		// done!
 		return $result;
 	}
-*/
+
 
 
 
