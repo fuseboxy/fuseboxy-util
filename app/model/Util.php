@@ -47,8 +47,8 @@ class Util {
 		<io>
 			<in>
 				<array name="$fileData" />
-				<string name="$filePath" optional="yes" comments="relative path to upload directory" />
-				<structure name="$pageOptions" optional="yes" />
+				<string name="$filePath" optional="yes" default="~emptyString~" comments="relative path to upload directory; use {false} or {null} to display PDF directly" />
+				<structure name="$options" optional="yes" />
 			</in>
 			<out>
 				<!-- file output -->
@@ -62,7 +62,7 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function array2pdf($fileData, $filePath='', $pageOptions=[]) {
+	public static function array2pdf($fileData, $filePath='', $options=[]) {
 		// validate library
 		foreach ( self::$libPath['array2pdf'] as $libClass ) {
 			if ( !class_exists($libClass) ) {
@@ -71,7 +71,7 @@ class Util {
 			}
 		}
 		// proceed to transform
-		$result = Util_PDF::array2pdf($fileData, $filePath, $pageOptions);
+		$result = Util_PDF::array2pdf($fileData, $filePath, $options);
 		if ( $result === false ) {
 			self::$error = '[Util::array2pdf] '.Util_PDF::error();
 			return false;
@@ -409,7 +409,7 @@ class Util {
 			<in>
 				<!-- parameters -->
 				<string name="$html" />
-				<string name="$filePath" optional="yes" comments="relative path to upload directory" />
+				<string name="$filePath" optional="yes" default="~emptyString~" comments="relative path to upload directory; use {false} or {null} to display PDF directly" />
 				<structure name="$pageOptions" optional="yes" />
 			</in>
 			<out>
@@ -424,7 +424,7 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function html2pdf($html, $filePath=null, $options=[]) {
+	public static function html2pdf($html, $filePath='', $options=[]) {
 		// validate library
 		foreach ( self::$libPath['html2pdf'] as $libClass ) {
 			if ( !class_exists($libClass) ) {
