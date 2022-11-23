@@ -64,11 +64,10 @@ class Util {
 	*/
 	public static function array2pdf($fileData, $filePath=null, $options=[]) {
 		// validate library
-		foreach ( self::$libPath['array2pdf'] as $libClass ) {
-			if ( !class_exists($libClass) ) {
-				self::$error = "[Util::array2pdf] Library is missing ({$libClass})";
-				return false;
-			}
+		$libClass = self::$libPath['array2pdf'];
+		if ( !class_exists($libClass) ) {
+			self::$error = "[Util::array2pdf] Library is missing ({$libClass})";
+			return false;
 		}
 		// proceed to transform
 		$result = Util_PDF::array2pdf($fileData, $filePath, $options);
