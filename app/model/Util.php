@@ -48,7 +48,7 @@ class Util {
 			<in>
 				<array name="$fileData" />
 				<string name="$filePath" optional="yes" default="~null~" comments="relative path to upload directory; use {false} or {null} to display PDF directly" />
-				<structure name="$options" optional="yes" />
+				<structure name="$pageOptions" optional="yes" />
 			</in>
 			<out>
 				<!-- file output -->
@@ -62,7 +62,7 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function array2pdf($fileData, $filePath=null, $options=[]) {
+	public static function array2pdf($fileData, $filePath=null, $pageOptions=[]) {
 		// validate library
 		$libClass = self::$libPath['array2pdf'];
 		if ( !class_exists($libClass) ) {
@@ -70,7 +70,7 @@ class Util {
 			return false;
 		}
 		// proceed to transform
-		$result = Util_PDF::array2pdf($fileData, $filePath, $options);
+		$result = Util_PDF::array2pdf($fileData, $filePath, $pageOptions);
 		if ( $result === false ) {
 			self::$error = '[Util::array2pdf] '.Util_PDF::error();
 			return false;
@@ -423,16 +423,15 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function html2pdf($html, $filePath=null, $options=[]) {
+	public static function html2pdf($html, $filePath=null, $pageOptions=[]) {
 		// validate library
-		foreach ( self::$libPath['html2pdf'] as $libClass ) {
-			if ( !class_exists($libClass) ) {
-				self::$error = "[Util::html2pdf] Library is missing ({$libClass})";
-				return false;
-			}
+		$libClass = self::$libPath['html2pdf'];
+		if ( !class_exists($libClass) ) {
+			self::$error = "[Util::html2pdf] Library is missing ({$libClass})";
+			return false;
 		}
 		// proceed to transform
-		$result = Util_PDF::array2pdf($html, $filePath, $pageOptions);
+		$result = Util_PDF::html2pdf($html, $filePath, $pageOptions);
 		if ( $result === false ) {
 			self::$error = '[Util::html2pdf] '.Util_PDF::error();
 			return false;
