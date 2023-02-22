@@ -91,10 +91,11 @@ class Util {
 						</structure>
 					</array>
 				</structure>
-				<string name="$filePath" optional="yes" comments="relative path to upload directory" />
+				<string name="$filePath" optional="yes" comments="relative path to upload directory; download directly when not specified" />
 				<structure name="$options">
-					<boolean name="showRecordCount" optional="yes" />
-					<structure name="columnWidth" optional="yes">
+					<boolean name="multipleWorksheets" default="false" />
+					<boolean name="showRecordCount" default="false" />
+					<structure name="columnWidth" default="~emptyArray~">
 						<array name="~worksheetName~">
 							<number name="+" />
 						</array>
