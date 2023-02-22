@@ -5,10 +5,7 @@ class Util {
 	// property : library for corresponding methods
 	private static $libPath = array(
 		'array2pdf' => 'Util_PDF',
-		'array2xls' => array(
-			'PhpOffice\PhpSpreadsheet\Spreadsheet',
-			'PhpOffice\PhpSpreadsheet\Writer\Xlsx',
-		),
+		'array2xls' => 'Util_XLS',
 		'html2md' => array(
 			__DIR__.'/../../lib/markdownify/2.3.1/src/Parser.php',
 			__DIR__.'/../../lib/markdownify/2.3.1/src/Converter.php',
@@ -23,10 +20,7 @@ class Util {
 		),
 		'md2html' => __DIR__.'/../../lib/parsedown/1.7.4/Parsedown.php',
 		'phpQuery' => __DIR__.'/../../lib/phpquery/2.0.1/phpQuery.php',
-		'xls2array' => array(
-			__DIR__.'/../../lib/simplexls/0.9.5/src/SimpleXLS.php',
-			__DIR__.'/../../lib/simplexlsx/0.8.15/src/SimpleXLSX.php',
-		),
+		'xls2array' => 'Util_XLS',
 	);
 
 
@@ -97,7 +91,7 @@ class Util {
 						</structure>
 					</array>
 				</structure>
-				<string name="$filePath" comments="relative path to upload directory" />
+				<string name="$filePath" optional="yes" comments="relative path to upload directory" />
 				<structure name="$options">
 					<boolean name="showRecordCount" optional="yes" />
 					<structure name="columnWidth" optional="yes">
@@ -119,107 +113,19 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function array2xls($fileData, $filePath, $options=[]) {
-		// fix swapped parameters
-		if ( is_string($fileData) and is_array($filePath) ) list($fileData, $filePath) = array($filePath, $fileData);
-		// mark start time
-		$startTime = microtime(true);
+	public static function array2xls($fileData, $filePath=null, $options=[]) {
 		// validate library
-		foreach ( self::$libPath['array2xls'] as $libClass ) {
-			if ( !class_exists($libClass) ) {
-				self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] PhpSpreadsheet library is missing ('.$libClass.')<br />Please use <em>composer</em> to install <strong>phpoffice/phpspreadsheet</strong> into your project';
-				return false;
-			}
-		}
-		// validate data format
-		if ( !is_array($fileData) ) {
-			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] Invalid data structure for Excel (Array is required)';
+		$libClass = self::$libPath['array2xls'];
+		if ( !class_exists($libClass) ) {
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] Library is missing ('.$libClass.')';
 			return false;
-		} elseif ( !empty($fileData) ) {
-			$firstWorksheetKey = array_key_first($fileData);
-			$firstWorksheetData = $fileData[$firstWorksheetKey];
-			if ( !is_array($firstWorksheetData) ) {
-				self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] Invalid data structure for Excel (1st level of array is worksheet name, and 2nd level of array is worksheet data)';
-				return false;
-			}
 		}
-		// determine output location
-		$result = array('path' => self::uploadDir($filePath), 'url'  => self::uploadUrl($filePath));
-		if ( $result['path'] === false or $result['url'] === false ) return false;
-		// create blank spreadsheet
-		$spreadsheet = new PhpOffice\PhpSpreadsheet\Spreadsheet();
-		// go through each worksheet
-		$wsIndex = 0;
-		foreach ( $fileData as $worksheetName => $worksheet ) {
-			// show number of records at worksheet name (when necessary)
-			if ( !empty($options['showRecordCount']) and !empty($worksheet) ) {
-				$worksheetName .= ' ('.count($worksheet).')';
-			}
-			// create worksheet
-			if ( $wsIndex > 0 ) $spreadsheet->createSheet();
-			$spreadsheet->setActiveSheetIndex($wsIndex);
-			$activeSheet = $spreadsheet->getActiveSheet();
-			$activeSheet->setTitle($worksheetName);
-			// all column names (from A to ZZ)
-			$alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-			$colNames = str_split($alphabet);
-			for ( $i=0; $i<strlen($alphabet); $i++ ) {
-				for ( $j=0; $j<strlen($alphabet); $j++ ) {
-					$colNames[] = $alphabet[$i].$alphabet[$j];
-				}
-			}
-			// column format
-			$activeSheet->getStyle('A:ZZ')->getFont()->setSize(10);
-			$activeSheet->getStyle('A:ZZ')->getAlignment()->setWrapText(true);
-			$activeSheet->getStyle('A:ZZ')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
-			$activeSheet->getStyle('A:ZZ')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-			// header format
-			$activeSheet->getStyle('1:1')->getFont()->setBold(true);
-			$activeSheet->getStyle('1:1')->getAlignment()->setWrapText(true);
-			$activeSheet->getStyle('1:1')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
-			$activeSheet->getStyle('1:1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFDDDDDD');
-			// column width (when necessary)
-			if ( !empty($options['columnWidth'][$worksheetName]) ) {
-				foreach ( $options['columnWidth'][$worksheetName] as $key => $val ) {
-					$activeSheet->getColumnDimension($colNames[$key])->setWidth($val);
-				}
-			}
-			// output header
-			if ( !empty($worksheet) ) {
-				$row = $worksheet[0];
-				$colIndex = 0;
-				foreach ( $row as $key => $val ) {
-					$activeSheet->setCellValue($colNames[$colIndex].'1', $key);
-					$colIndex++;
-				}
-			}
-			// output each row of data
-			foreach ( $worksheet as $rowIndex => $row ) {
-				$rowNumber = $rowIndex + 2;
-				// go through each column
-				$colIndex = 0;
-				foreach ( $row as $key => $val ) {
-					$activeSheet->setCellValue($colNames[$colIndex].$rowNumber, $val);
-					$colIndex++;
-				} // foreach-col
-			} // foreach-row
-			$wsIndex++;
-			// focus first cell (when finished)
-			$activeSheet->getStyle('A1');
-		} // foreach-worksheet
-		// mark end time
-		$endTime = microtime(true);
-		$et = round(($endTime-$startTime)*1000);
-		// show execution time at last worksheet
-		$spreadsheet->createSheet();
-		$spreadsheet->setActiveSheetIndex( count($fileData) );
-		$activeSheet = $spreadsheet->getActiveSheet();
-		$activeSheet->setTitle('et ('.$et.'ms)');
-		// focus first worksheet (when finished)
-		$spreadsheet->setActiveSheetIndex(0);
-		// write to report
-		$writer = new PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-		$writer->save($result['path']);
+		// proceed to transform
+		$result = Util_XLS::array2xls($fileData, $filePath, $options);
+		if ( $result === false ) {
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] '.Util_XLS::error();
+			return false;
+		}
 		// done!
 		return $result;
 	}
@@ -1058,6 +964,7 @@ class Util {
 	<fusedoc>
 		<description>
 			convert csv/xls/xlsx to array
+			===> convert first worksheet only
 			===> use first row as column name (when necessary)
 			===> use snake-case for column name (e.g. this_is_col_name)
 		</description>
@@ -1082,79 +989,17 @@ class Util {
 	</fusedoc>
 	*/
 	public static function xls2array($file, $options=[]) {
-		// default options
-		$options['startRow'] = $options['startRow'] ?? 1;
-		$options['worksheet'] = $options['worksheet'] ?? 0;
-		$options['firstRowAsHeader'] = $options['firstRowAsHeader'] ?? true;
-		$options['convertHeaderCase'] = $options['convertHeaderCase'] ?? true;
-		// load library
-		foreach ( self::$libPath['xls2array'] as $path ) {
-			if ( !is_file($path) ) {
-				self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] SimpleXLSX library is missing ('.$path.')';
-				return false;
-			}
-			require_once($path);
-		}
-		// validation
-		$fileExt = strtoupper( pathinfo($file, PATHINFO_EXTENSION) );
-		if ( !is_file($file) ) {
-			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] File not found ('.$file.')';
-			return false;
-		} elseif ( !in_array($fileExt, ['XLSX','XLS','CSV']) ) {
-			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] File type <strong><em>'.$fileExt.'</em></strong> is not supported';
+		// validate library
+		$libClass = self::$libPath['xls2array'];
+		if ( !class_exists($libClass) ) {
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] Library is missing ('.$libClass.')';
 			return false;
 		}
-		// parse csv by php
-		if ( $fileExt == 'CSV' ) {
-			$data = file_get_contents($file);
-			$data = mb_convert_encoding($data, 'UTF-8', mb_detect_encoding($data, 'UTF-8, ISO-8859-1', true));
-			$data = array_map('str_getcsv', explode(PHP_EOL, $data));
-		// parse excel by library
-		} else {
-			$data = call_user_func('Simple'.$fileExt.'::parse', $file);
-			if ( $data === false ) {
-				self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] '.call_user_func('Simple'.$fileExt.'::parseError');
-				return false;
-			}
-		}
-		// extract data from specific worksheet (when necessary)
-		if ( method_exists($data, 'rows') ) $data = $data->rows($options['worksheet']);
-		for ( $i=0; $i<($options['startRow']-1); $i++ ) if ( isset($data[$i]) ) unset($data[$i]);
-		$data = array_values($data);
-		// validation
-		// ===> simply return when no data
-		// ===> simply return when no need to apply first row as header
-		if ( empty($data) or !$options['firstRowAsHeader'] ) return $data;
-		// get column name from first row
-		$colNames = $data[0];
-		unset($data[0]);
-		$data = array_values($data);
-		// convert column name into snake case
-		if ( $options['convertHeaderCase'] ) {
-			$colNames = array_map('strtolower', $colNames);
-			foreach ( $colNames as $i => $val ) {
-				$val = strtolower($val);
-				$val = preg_replace( '/[^a-z0-9]/i', ' ', $val);
-				$val = preg_replace('!\s+!', ' ', $val);
-				$val = str_replace(' ', '_', $val);
-				$val = trim($val, '_');
-				$colNames[$i] = $val;
-			}
-		}
-		// go through each row and create new record
-		$result = array();
-		foreach ( $data as $row => $rowData ) {
-			$item = array();
-			foreach ( $colNames as $colIndex => $colName ) {
-				$item[$colName] = isset($rowData[$colIndex]) ? $rowData[$colIndex] : '';
-			}
-			$result[] = $item;
-		}
-		// clean-up data
-		foreach ( $result as $row => $rowData ) {
-			foreach ( $rowData as $col => $val ) {
-				$result[$row][$col] = trim($val);
-			}
+		// proceed to transform
+		$result = Util_XLS::xls2array($file, $options);
+		if ( $result === false ) {
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] '.Util_XLS::error();
+			return false;
 		}
 		// done!
 		return $result;
