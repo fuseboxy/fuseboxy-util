@@ -752,6 +752,58 @@ class Util {
 	/**
 	<fusedoc>
 		<description>
+			load tmpDir from framework config or constant
+			===> append with specified sub-path
+			===> create directory in server
+		</description>
+		<io>
+			<in>
+				<!-- config -->
+				<string name="$fusebox->config['tmpDir']|FUSEBOXY_UTIL_TMP_DIR" />
+				<!-- param -->
+				<path name="$append" optional="yes" comments="file path to append" />
+			</in>
+			<out>
+				<!-- new directory -->
+				<path name="dirname(~tmpDir~/~append~)" optional="yes" />
+				<!-- return value -->
+				<string name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function tmpDir($append='') {
+		if ( class_exists('F') ) $result = F::config('tmpDir');
+		elseif ( defined('FUSEBOXY_UTIL_TMP_DIR') ) $result = FUSEBOXY_UTIL_TMP_DIR;
+		// validation
+		if ( empty($result) ) {
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] Config [tmpDir] is required';
+			return false;
+		}
+		// unify directory separator
+		$result = str_ireplace('\\', '/', $result);
+		$append = str_ireplace('\\', '/', $append);
+		// add trailing slash (when necessary)
+		if ( substr($result, -1) != '/' ) $result .= '/';
+		// append file path
+		$result .= $append;
+		// create directory (when necessary)
+		$dir2create = dirname($result);
+		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
+			$err = error_get_last();
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] Error creating directory - '.$err['message'];
+			return false;
+		}
+		// done!
+		return $result;
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
 			load uploadDir from framework config or constant
 			===> append with specified sub-path
 			===> create directory in server
