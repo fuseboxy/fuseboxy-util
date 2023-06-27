@@ -40,9 +40,43 @@ class Util {
 		</description>
 		<io>
 			<in>
-				<array name="$fileData" />
+				<array name="$fileData">
+					<structure name="+">
+						<string name="type" default="div" value="div|p|h1|h2|h3|h4|h5|h6|small|ol|ul|br|hr|img|pagebreak" />
+						<!-- value -->
+						<string name="value" oncondition="div|p|h1..h6|small" />
+						<array name="value" oncondition="ol|ul">
+							<string name="+" />
+						</array>
+						<string name="src" oncondition="img" />
+						<!-- styling -->
+						<boolean name="bold" default="false" />
+						<boolean name="underline" default="false" />
+						<boolean name="italic" default="false" />
+						<string name="color|fontColor" value="ffccaa|#ffccaa|.." />
+						<number name="size|fontSize" optional="yes" oncondition="div|p|ul|ol|br" />
+						<!-- alignment -->
+						<string name="align" value="left|right|center|justify" oncondition="div|p|h1..h6|small|img" />
+						<!-- options -->
+						<number name="repeat" optional="yes" default="1" oncondition="br" />
+						<number name="height" optional="yes" oncondition="img" />
+						<number name="width" optional="yes" oncondition="img" />
+						<number name="indent" optional="yes" oncondition="ol|ul" />
+						<string name="url" optional="yes" />
+					</structure>
+				</array>
 				<string name="$filePath" optional="yes" default="~null~" comments="relative path to upload directory; use {false} or {null} to display PDF directly" />
-				<structure name="$pageOptions" optional="yes" />
+				<structure name="$pageOptions" optional="yes">
+					<string name="paperSize" default="A4" value="A3|A4|A5|~array(width,height)~">
+						[A3] 297 x 420
+						[A4] 210 x 297
+						[A5] 148 x 210
+					</string>
+					<string name="orientation" default="P" value="P|L" />
+					<string name="fontFamily" default="" />
+					<number name="fontSize" default="12" />
+					<number name="marginTop|marginLeft|marginRight|marginBottom" default="10" comments="1cm" />
+				</structure>
 			</in>
 			<out>
 				<!-- file output -->
@@ -313,10 +347,19 @@ class Util {
 		</description>
 		<io>
 			<in>
-				<!-- parameters -->
 				<string name="$html" />
 				<string name="$filePath" optional="yes" default="~null~" comments="relative path to upload directory; use {false} or {null} to display PDF directly" />
-				<structure name="$pageOptions" optional="yes" />
+				<structure name="$pageOptions" optional="yes">
+					<string name="paperSize" default="A4" value="A3|A4|A5|~array(width,height)~">
+						[A3] 297 x 420
+						[A4] 210 x 297
+						[A5] 148 x 210
+					</string>
+					<string name="orientation" default="P" value="P|L" />
+					<string name="fontFamily" default="" />
+					<number name="fontSize" default="12" />
+					<number name="marginTop|marginLeft|marginRight|marginBottom" default="10" comments="1cm" />
+				</structure>
 			</in>
 			<out>
 				<!-- file output -->
@@ -1056,6 +1099,67 @@ class Util {
 		}
 		// done!
 		return $result;
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			convert xml to array
+		</description>
+		<io>
+			<in>
+				<string name="$xml_string" />
+			</in>
+			<out>
+				<array name="~return~" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function xml2array($xml_string) {
+		$json = self::xml2json($xml_string);
+		if ( $json === false ) return false;
+		$result = json_decode($json, true);
+		if ( $result === false ) {
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] Error parsing JSON string';
+			return false;
+		}
+		return $result;
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			convert xml to json
+		</description>
+		<io>
+			<in>
+				<string name="$xml_string" />
+			</in>
+			<out>
+				<string name="~return~" format="json" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function xml2json($xml_string) {
+		$xml = simplexml_load_string($xml_string);
+		if ( $xml === false ) {
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] Error parsing XML string';
+			return false;
+		}
+		$json = json_encode($xml);
+		if ( $json === false ) {
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] Error converting XML to JSON string';
+			return false;
+		}
+		return $json;
 	}
 
 
