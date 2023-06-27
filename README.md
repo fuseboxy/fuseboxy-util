@@ -26,6 +26,58 @@ Methods
 -------
 
 #### array2pdf
+```
+<io>
+	<in>
+		<array name="$fileData">
+			<structure name="+">
+				<string name="type" default="div" value="div|p|h1|h2|h3|h4|h5|h6|small|ol|ul|br|hr|img|pagebreak" />
+				<!-- value -->
+				<string name="value" oncondition="div|p|h1..h6|small" />
+				<array name="value" oncondition="ol|ul">
+					<string name="+" />
+				</array>
+				<string name="src" oncondition="img" />
+				<!-- styling -->
+				<boolean name="bold" default="false" />
+				<boolean name="underline" default="false" />
+				<boolean name="italic" default="false" />
+				<string name="color|fontColor" value="ffccaa|#ffccaa|.." />
+				<number name="size|fontSize" optional="yes" oncondition="div|p|ul|ol|br" />
+				<!-- alignment -->
+				<string name="align" value="left|right|center|justify" oncondition="div|p|h1..h6|small|img" />
+				<!-- options -->
+				<number name="repeat" optional="yes" default="1" oncondition="br" />
+				<number name="height" optional="yes" oncondition="img" />
+				<number name="width" optional="yes" oncondition="img" />
+				<number name="indent" optional="yes" oncondition="ol|ul" />
+				<string name="url" optional="yes" />
+			</structure>
+		</array>
+		<string name="$filePath" optional="yes" default="~null~" comments="relative path to upload directory; use {false} or {null} to display PDF directly" />
+		<structure name="$pageOptions" optional="yes">
+			<string name="paperSize" default="A4" value="A3|A4|A5|~array(width,height)~">
+				[A3] 297 x 420
+				[A4] 210 x 297
+				[A5] 148 x 210
+			</string>
+			<string name="orientation" default="P" value="P|L" />
+			<string name="fontFamily" default="" />
+			<number name="fontSize" default="12" />
+			<number name="marginTop|marginLeft|marginRight|marginBottom" default="10" comments="1cm" />
+		</structure>
+	</in>
+	<out>
+		<!-- file output -->
+		<file name="~uploadDir~/~filePath~" optional="yes" oncondition="when {filePath} specified" />
+		<!-- return value -->
+		<structure name="~return~" optional="yes" oncondition="when {filePath} specified">
+			<string name="path" />
+			<string name="url" />
+		</structure>
+	</out>
+</io>
+```
 
 #### array2xls
 ```
@@ -119,6 +171,34 @@ Methods
 ```
 
 #### html2pdf
+```
+<io>
+	<in>
+		<string name="$html" />
+		<string name="$filePath" optional="yes" default="~null~" comments="relative path to upload directory; use {false} or {null} to display PDF directly" />
+		<structure name="$pageOptions" optional="yes">
+			<string name="paperSize" default="A4" value="A3|A4|A5|~array(width,height)~">
+				[A3] 297 x 420
+				[A4] 210 x 297
+				[A5] 148 x 210
+			</string>
+			<string name="orientation" default="P" value="P|L" />
+			<string name="fontFamily" default="" />
+			<number name="fontSize" default="12" />
+			<number name="marginTop|marginLeft|marginRight|marginBottom" default="10" comments="1cm" />
+		</structure>
+	</in>
+	<out>
+		<!-- file output -->
+		<file name="~uploadDir~/~filePath~" optional="yes" oncondition="when {filePath} specified" />
+		<!-- return value -->
+		<structure name="~return~" optional="yes" oncondition="when {filePath} specified">
+			<string name="path" />
+			<string name="url" />
+		</structure>
+	</out>
+</io>
+```
 
 #### httpRequest
 ```
@@ -263,6 +343,30 @@ Methods
 	</in>
 	<out>
 		<string name="~return~" />
+	</out>
+</io>
+```
+
+#### xml2array
+```
+<io>
+	<in>
+		<string name="$xml_string" />
+	</in>
+	<out>
+		<array name="~return~" />
+	</out>
+</io>
+```
+
+#### xml2json
+```
+<io>
+	<in>
+		<string name="$xml_string" />
+	</in>
+	<out>
+		<string name="~return~" format="json" />
 	</out>
 </io>
 ```
