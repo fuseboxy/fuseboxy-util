@@ -261,7 +261,9 @@ Methods
 		<reference name="&$responseTime" />
 	</in>
 	<out>
+		<!-- return value -->
 		<string name="~return~" optional="yes" oncondition="success" comments="page response" />
+		<!-- additional info -->
 		<string name="$httpStatus" optional="yes" />
 		<string name="$responseHeader" optional="yes" oncondition="success" />
 		<number name="$responseTime" optional="yes" oncondition="success" />
