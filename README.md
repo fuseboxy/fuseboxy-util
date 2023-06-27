@@ -217,7 +217,9 @@ Methods
 		<reference name="&$responseTime" />
 	</in>
 	<out>
+		<!-- return value -->
 		<string name="~return~" optional="yes" oncondition="success" comments="page response" />
+		<!-- additional info -->
 		<string name="$httpStatus" optional="yes" />
 		<string name="$responseHeader" optional="yes" oncondition="success" />
 		<number name="$responseTime" optional="yes" oncondition="success" />
@@ -231,19 +233,17 @@ Methods
 <io>
 	<in>
 		<string name="$url" />
-		<structure name="$headers">
-			<string name="~headerName~" />
-		</structure>
 		<reference name="&$httpStatus" />
 		<reference name="&$responseHeader" />
 		<reference name="&$responseTime" />
 	</in>
 	<out>
+		<!-- return value -->
 		<string name="~return~" optional="yes" oncondition="success" comments="page response" />
+		<!-- additional info -->
 		<string name="$httpStatus" optional="yes" />
 		<string name="$responseHeader" optional="yes" oncondition="success" />
 		<number name="$responseTime" optional="yes" oncondition="success" />
-		<boolean name="~return~" value="false" optional="yes" oncondition="failure" />
 	</out>
 </io>
 ```
@@ -256,9 +256,6 @@ Methods
 		<structure name="$fields">
 			<string name="~fieldName~" comments="no url-encoded" />
 		</structure>
-		<structure name="$headers">
-			<string name="~headerName~" />
-		</structure>
 		<reference name="&$httpStatus" />
 		<reference name="&$responseHeader" />
 		<reference name="&$responseTime" />
@@ -268,7 +265,6 @@ Methods
 		<string name="$httpStatus" optional="yes" />
 		<string name="$responseHeader" optional="yes" oncondition="success" />
 		<number name="$responseTime" optional="yes" oncondition="success" />
-		<boolean name="~return~" value="false" optional="yes" oncondition="failure" />
 	</out>
 </io>
 ```
