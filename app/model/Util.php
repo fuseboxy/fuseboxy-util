@@ -832,8 +832,7 @@ class Util {
 		// append file path
 		$result .= $append;
 		// create directory (when necessary)
-		$dir2create = dirname($result);
-		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
+		if ( !is_dir($result) and !mkdir($result, 0777, true) ) {
 			$err = error_get_last();
 			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] Error creating directory - '.$err['message'];
 			return false;
@@ -884,8 +883,7 @@ class Util {
 		// append file path
 		$result .= $append;
 		// create directory (when necessary)
-		$dir2create = dirname($result);
-		if ( !is_dir($dir2create) and !mkdir($dir2create, 0777, true) ) {
+		if ( !is_dir($result) and !mkdir($result, 0777, true) ) {
 			$err = error_get_last();
 			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] Error creating directory ('.$err['message'].')';
 			return false;
