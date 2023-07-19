@@ -829,8 +829,9 @@ class Util {
 		$append = str_ireplace('\\', '/', $append);
 		// add trailing slash (when necessary)
 		if ( substr($result, -1) != '/' ) $result .= '/';
-		// append file path
+		// append file path (and add trailing slash)
 		$result .= $append;
+		if ( substr($result, -1) != '/' ) $result .= '/';
 		// create directory (when necessary)
 		if ( !is_dir($result) and !mkdir($result, 0777, true) ) {
 			$err = error_get_last();
@@ -880,8 +881,9 @@ class Util {
 		$append = str_ireplace('\\', '/', $append);
 		// add trailing slash (when necessary)
 		if ( substr($result, -1) != '/' ) $result .= '/';
-		// append file path
+		// append file path (and add trailing slash)
 		$result .= $append;
+		if ( substr($result, -1) != '/' ) $result .= '/';
 		// create directory (when necessary)
 		if ( !is_dir($result) and !mkdir($result, 0777, true) ) {
 			$err = error_get_last();
@@ -926,8 +928,9 @@ class Util {
 		$append = str_ireplace('\\', '/', $append);
 		// add trailing slash (when necessary)
 		if ( substr($result, -1) != '/' ) $result .= '/';
-		// append file path
+		// append file path (and add trailing slash)
 		$result .= $append;
+		if ( substr($result, -1) != '/' ) $result .= '/';
 		// done!
 		return $result;
 	}
