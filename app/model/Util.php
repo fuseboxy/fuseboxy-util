@@ -817,6 +817,9 @@ class Util {
 	</fusedoc>
 	*/
 	public static function tmpDir($append='') {
+		// fix param
+		if ( $append == '.' ) $append = '';
+		// check essential config
 		if ( class_exists('F') ) $result = F::config('tmpDir');
 		elseif ( defined('FUSEBOXY_UTIL_TMP_DIR') ) $result = FUSEBOXY_UTIL_TMP_DIR;
 		// validation
@@ -869,6 +872,9 @@ class Util {
 	</fusedoc>
 	*/
 	public static function uploadDir($append='') {
+		// fix param
+		if ( $append == '.' ) $append = '';
+		// check essential config
 		if ( class_exists('F') ) $result = F::config('uploadDir');
 		elseif ( defined('FUSEBOXY_UTIL_UPLOAD_DIR') ) $result = FUSEBOXY_UTIL_UPLOAD_DIR;
 		// validation
@@ -916,6 +922,9 @@ class Util {
 	</fusedoc>
 	*/
 	public static function uploadUrl($append='') {
+		// fix param
+		if ( $append == '.' ) $append = '';
+		// check essential config
 		if ( class_exists('F') ) $result = F::config('uploadUrl');
 		elseif ( defined('FUSEBOXY_UTIL_UPLOAD_URL') ) $result = FUSEBOXY_UTIL_UPLOAD_URL;
 		// validation
