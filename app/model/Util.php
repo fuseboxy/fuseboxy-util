@@ -805,7 +805,7 @@ class Util {
 				<!-- config -->
 				<string name="$fusebox->config['tmpDir']|FUSEBOXY_UTIL_TMP_DIR" />
 				<!-- param -->
-				<path name="$append" optional="yes" comments="file path to append" />
+				<string name="$append" optional="yes" comments="subdirectory to append" />
 			</in>
 			<out>
 				<!-- new directory -->
@@ -860,7 +860,7 @@ class Util {
 				<!-- config -->
 				<string name="$fusebox->config['uploadDir']|FUSEBOXY_UTIL_UPLOAD_DIR" />
 				<!-- param -->
-				<path name="$append" optional="yes" comments="file path to append" />
+				<string name="$append" optional="yes" comments="file path to append" />
 			</in>
 			<out>
 				<!-- new directory -->
@@ -913,7 +913,7 @@ class Util {
 				<!-- config -->
 				<string name="$fusebox->config['uploadUrl']|FUSEBOXY_UTIL_UPLOAD_URL" />
 				<!-- param -->
-				<path name="$append" optional="yes" comments="file path to append" />
+				<path name="$append" optional="yes" comments="subdirectory to append" />
 			</in>
 			<out>
 				<string name="~return~" />
