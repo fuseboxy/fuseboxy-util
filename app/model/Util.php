@@ -906,6 +906,43 @@ class Util {
 	/**
 	<fusedoc>
 		<description>
+			convert physical path to root-relative-url
+		</description>
+		<io>
+			<in>
+				<string name="$input" comments="physical path" example="/var/www/html/my-app/upload/image.png" />
+			</in>
+			<out>
+				<string name="~return~" comments="root-relative-url" example="/my-app/upload/image.png" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function uploadPath2uploadUrl($input) {
+		// unify & dedupe directory separator
+		$input = str_replace('\\', '/', $input);
+		// obtain base upload directory
+		$baseDir = self::uploadDir();
+		if ( $baseDir === false ) {
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] '.self::error();
+			return false;
+		}
+		// obtain base upload url
+		$baseUrl = self::uploadUrl();
+		if ( $baseUrl === false ) {
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] '.self::error();
+			return false;
+		}
+		// done!
+		return str_ireplace($baseDir, $baseUrl, $input);
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
 			load uploadUrl from framework config or constant
 		</description>
 		<io>
@@ -942,6 +979,43 @@ class Util {
 		if ( substr($result, -1) != '/' ) $result .= '/';
 		// done!
 		return $result;
+	}
+
+
+
+
+	/**
+	<fusedoc>
+		<description>
+			convert root-relative-url to physical path
+		</description>
+		<io>
+			<in>
+				<string name="$input" comments="root-relative-url" example="/my-app/upload/image.png" />
+			</in>
+			<out>
+				<string name="~return~" comments="physical path" example="/var/www/html/my-app/upload/image.png" />
+			</out>
+		</io>
+	</fusedoc>
+	*/
+	public static function uploadUrl2uploadPath($input) {
+		// unify & dedupe directory separator
+		$input = str_replace('\\', '/', $input);
+		// obtain base upload directory
+		$baseDir = self::uploadDir();
+		if ( $baseDir === false ) {
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] '.self::error();
+			return false;
+		}
+		// obtain base upload url
+		$baseUrl = self::uploadUrl();
+		if ( $baseUrl === false ) {
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] '.self::error();
+			return false;
+		}
+		// done!
+		return str_ireplace($baseUrl, $baseDir, $input);
 	}
 
 
