@@ -1056,7 +1056,11 @@ class Util {
 	}
 	// UUID v3
 	private static function uuid__v3($namespace, $name) {
-		if ( self::uuid__isValidNamespace($namespace) === false ) return false;
+		// validation
+		if ( self::uuid__isValidNamespace($namespace) === false ) {
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] '.self::error();
+			return false;
+		}
 		// Get hexadecimal components of namespace
 		$nhex = str_replace(array('-','{','}'), '', $namespace);
 		// Binary Value
@@ -1102,7 +1106,11 @@ class Util {
 	}
 	// UUID v5
 	private static function uuid__v5($namespace, $name) {
-		if ( self::uuid__isValidNamespace($namespace) === false ) return false;
+		// validation
+		if ( self::uuid__isValidNamespace($namespace) === false ) {
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] '.self::error();
+			return false;
+		}
 		// Get hexadecimal components of namespace
 		$nhex = str_replace(array('-','{','}'), '', $namespace);
 		// Binary Value
@@ -1206,7 +1214,10 @@ class Util {
 	*/
 	public static function xml2array($xml_string) {
 		$json = self::xml2json($xml_string);
-		if ( $json === false ) return false;
+		if ( $json === false ) {
+			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] '.self::error();
+			return false;
+		}
 		$result = json_decode($json, true);
 		if ( $result === false ) {
 			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] Error parsing JSON string';
