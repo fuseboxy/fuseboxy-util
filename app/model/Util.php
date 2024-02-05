@@ -806,6 +806,9 @@ class Util {
 				<string name="$fusebox->config['tmpDir']|FUSEBOXY_UTIL_TMP_DIR" />
 				<!-- param -->
 				<string name="$append" optional="yes" comments="subdirectory to append" />
+				<structure name="$options" optional="yes">
+					<string name="mode" default="0755" optional="yes" />
+				</structure>
 			</in>
 			<out>
 				<!-- new directory -->
@@ -816,9 +819,11 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function tmpDir($append='') {
+	public static function tmpDir($append='', $options=[]) {
 		// fix param
 		if ( $append == '.' ) $append = '';
+		// option default
+		$options['mode'] = $options['mode'] ?? '0755';
 		// check essential config
 		if ( class_exists('F') ) $result = F::config('tmpDir');
 		elseif ( defined('FUSEBOXY_UTIL_TMP_DIR') ) $result = FUSEBOXY_UTIL_TMP_DIR;
@@ -836,7 +841,7 @@ class Util {
 		$result .= $append;
 		if ( substr($result, -1) != '/' ) $result .= '/';
 		// create directory (when necessary)
-		if ( !is_dir($result) and !mkdir($result, 0777, true) ) {
+		if ( !is_dir($result) and !mkdir($result, $options['mode'], true) ) {
 			$err = error_get_last();
 			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] Error creating directory - '.$err['message'];
 			return false;
@@ -861,6 +866,9 @@ class Util {
 				<string name="$fusebox->config['uploadDir']|FUSEBOXY_UTIL_UPLOAD_DIR" />
 				<!-- param -->
 				<string name="$append" optional="yes" comments="file path to append" />
+				<structure name="$options" optional="yes">
+					<string name="mode" default="0755" optional="yes" />
+				</structure>
 			</in>
 			<out>
 				<!-- new directory -->
@@ -871,9 +879,11 @@ class Util {
 		</io>
 	</fusedoc>
 	*/
-	public static function uploadDir($append='') {
+	public static function uploadDir($append='', $options=[]) {
 		// fix param
 		if ( $append == '.' ) $append = '';
+		// option default
+		$options['mode'] = $options['mode'] ?? '0755';
 		// check essential config
 		if ( class_exists('F') ) $result = F::config('uploadDir');
 		elseif ( defined('FUSEBOXY_UTIL_UPLOAD_DIR') ) $result = FUSEBOXY_UTIL_UPLOAD_DIR;
@@ -891,7 +901,7 @@ class Util {
 		$result .= $append;
 		if ( substr($result, -1) != '/' ) $result .= '/';
 		// create directory (when necessary)
-		if ( !is_dir($result) and !mkdir($result, 0777, true) ) {
+		if ( !is_dir($result) and !mkdir($result, $options['mode'], true) ) {
 			$err = error_get_last();
 			self::$error = '['.__CLASS__.'::'.__FUNCTION__.'] Error creating directory ('.$err['message'].')';
 			return false;
