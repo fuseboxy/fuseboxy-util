@@ -3,6 +3,12 @@
 	"description": "Fuseboxy Util - Tools Come in Handy",
 	"license": "MIT",
 	"type": "fuseboxy-module",
-	"require": { "fuseboxy/fuseboxy-installer": "1.*" },
-	"autoload": { "files": [ "app/model/Util.php" ] }
+	"require": {
+		"fuseboxy/fuseboxy-installer": "1.*"
+	},
+	"autoload": {
+		"files": [
+			"app/model/Util.php"
+		]
+	}
 }
