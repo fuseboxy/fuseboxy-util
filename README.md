@@ -1,5 +1,5 @@
-Fuseboxy Util
-=============
+Fuseboxy Util (1.x)
+===================
 
 Installation
 ------------
